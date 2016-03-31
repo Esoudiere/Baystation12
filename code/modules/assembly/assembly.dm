@@ -106,7 +106,7 @@
 	var/list/devices = list()
 	if(holder) // Not using associative lists for ui.
 		for(var/obj/item/device/assembly/A in holder.connected_devices) // We need the index AND object, can't use helper procs.
-			var/index = get_device_index(A)
+			var/index = get_index(A)
 			if(index)
 				if(num2text(index) in connects_to)
 					devices.Add(A.interface_name, index)

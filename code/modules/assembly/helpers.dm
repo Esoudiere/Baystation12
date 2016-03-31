@@ -39,20 +39,6 @@
 	add_debug_log("Got linked devices: \[[src]:[devices.len]\]")
 	return devices
 
-/obj/item/device/assembly/proc/get_device_index(var/obj/item/device/assembly/A)
-//	add_debug_log("Finding index: \[[src] ([A])\]")
-	var/index = 0
-	if(holder)
-		for(var/i=1, i<=holder.connected_devices.len, i++)
-			var/obj/O = holder.connected_devices[i]
-			if(A == O)
-				index = i
-				break
-	if(index)
-		add_debug_log("Got index: \[[src]:[index]\]")
-		return index
-	return 0
-
 /obj/item/device/assembly/proc/get_devices_connected_to()
 //	add_debug_log("Getting devices linked to \[[src]\]")
 	var/list/devices = list()
@@ -148,6 +134,11 @@
 		var/obj/item/device/assembly/device = connected_devices[i]
 		if(device == A)
 			return i
+	return 0
+
+/obj/item/device/assembly/proc/get_index(var/obj/item/device/assembly/A)
+	if(holder)
+		return holder.get_index(A)
 	return 0
 
 /obj/item/device/assembly/proc/IndexHasSafety(var/index) // Wire proc

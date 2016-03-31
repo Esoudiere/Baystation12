@@ -422,7 +422,7 @@
 					removing = null
 		else
 			user << "<span class='warning'>You cannot do that while modifying \the [stage_name]!</span>"
-			return
+		return
 	if(istype(O, /obj/item/weapon/wirecutters))
 		if(acting) return
 		var/list/choices = list()
@@ -787,7 +787,6 @@
 	icon_state = "box"
 	item_state = "assembly"
 	w_class = 5.0
-	density = 1
 	upgraded = list("cable" = 10, "steel" = 15, "rods" = 5, "plasteel" = 1, "power" = 1)
 
 	max_connections = 10
