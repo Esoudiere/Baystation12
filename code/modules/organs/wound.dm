@@ -17,18 +17,13 @@
 	var/min_damage = 0
 
 	// is the wound bandaged?
-	var/bandaged = 0
-	// Similar to bandaged, but works differently
+	var/obj/item/weapon/bandage/bandage
 	var/clamped = 0
-	// is the wound salved?
-	var/salved = 0
-	// is the wound disinfected?
-	var/disinfected = 0
 	var/created = 0
 	// number of wounds of this type
 	var/amount = 1
-	// amount of germs in the wound
-	var/germ_level = 0
+	var/obj/item/organ/holder
+	var/datum/organ_controller/control
 
 	/*  These are defined by the wound type and should not be changed */
 
@@ -38,21 +33,23 @@
 	var/internal = 0
 	// maximum stage at which bleeding should still happen. Beyond this stage bleeding is prevented.
 	var/max_bleeding_stage = 0
-	// one of CUT, PIERCE, BRUISE, BURN
+	// one of CUT, BRUISE, BURN
 	var/damage_type = CUT
 	// whether this wound needs a bandage/salve to heal at all
 	// the maximum amount of damage that this wound can have and still autoheal
 	var/autoheal_cutoff = 15
 
-
+	var/scar_type
 
 
 	// helper lists
 	var/tmp/list/desc_list = list()
 	var/tmp/list/damage_list = list()
 
-	New(var/damage)
-
+	New(var/damage, var/obj/item/organ/O)
+		if(!O || !damage) return
+		O = holder
+		control = O.control
 		created = world.time
 
 		// reading from a list("stage" = damage) is pretty difficult, so build two separate
@@ -82,72 +79,21 @@
 	proc/wound_damage()
 		return src.damage / src.amount
 
-	proc/can_autoheal()
-		if(src.wound_damage() <= autoheal_cutoff)
-			return 1
-
-		return is_treated()
-
-	// checks whether the wound has been appropriately treated
-	proc/is_treated()
-		if(damage_type == BRUISE || damage_type == CUT)
-			return bandaged
-		else if(damage_type == BURN)
-			return salved
-
 	// Checks whether other other can be merged into src.
 	proc/can_merge(var/datum/wound/other)
 		if (other.type != src.type) return 0
 		if (other.current_stage != src.current_stage) return 0
 		if (other.damage_type != src.damage_type) return 0
-		if (!(other.can_autoheal()) != !(src.can_autoheal())) return 0
-		if (!(other.bandaged) != !(src.bandaged)) return 0
+		if (other.bandage != src.bandage) return 0
 		if (!(other.clamped) != !(src.clamped)) return 0
-		if (!(other.salved) != !(src.salved)) return 0
-		if (!(other.disinfected) != !(src.disinfected)) return 0
 		//if (other.germ_level != src.germ_level) return 0
 		return 1
 
 	proc/merge_wound(var/datum/wound/other)
 		src.damage += other.damage
 		src.amount += other.amount
-		src.bleed_timer += other.bleed_timer
-		src.germ_level = max(src.germ_level, other.germ_level)
+		src.blood_loss_rate += other.blood_loss_rate
 		src.created = max(src.created, other.created)	//take the newer created time
-
-	// checks if wound is considered open for external infections
-	// untreated cuts (and bleeding bruises) and burns are possibly infectable, chance higher if wound is bigger
-	proc/infection_check()
-		if (damage < 10)	//small cuts, tiny bruises, and moderate burns shouldn't be infectable.
-			return 0
-		if (is_treated() && damage < 25)	//anything less than a flesh wound (or equivalent) isn't infectable if treated properly
-			return 0
-		if (disinfected)
-			germ_level = 0	//reset this, just in case
-			return 0
-
-		if (damage_type == BRUISE && !bleeding()) //bruises only infectable if bleeding
-			return 0
-
-		var/dam_coef = round(damage/10)
-		switch (damage_type)
-			if (BRUISE)
-				return prob(dam_coef*5)
-			if (BURN)
-				return prob(dam_coef*10)
-			if (CUT)
-				return prob(dam_coef*20)
-
-		return 0
-
-	proc/bandage()
-		bandaged = 1
-
-	proc/salve()
-		salved = 1
-
-	proc/disinfect()
-		disinfected = 1
 
 	// heal the given amount of damage, and if the given amount of damage was more
 	// than what needed to be healed, return how much heal was left
@@ -211,8 +157,6 @@
 		if (wound_damage() <= 30 && bleed_timer <= 0)
 			return 0	//Bleed timer has run out. Wounds with more than 30 damage don't stop bleeding on their own.
 
-		return 1
-
 /** WOUND DEFINITIONS **/
 
 //Note that the MINIMUM damage before a wound can be applied should correspond to
@@ -235,18 +179,6 @@
 					return /datum/wound/cut/deep
 				if(0 to 15)
 					return /datum/wound/cut/small
-		if(PIERCE)
-			switch(damage)
-				if(60 to INFINITY)
-					return /datum/wound/puncture/massive
-				if(50 to 60)
-					return /datum/wound/puncture/gaping_big
-				if(30 to 50)
-					return /datum/wound/puncture/gaping
-				if(15 to 30)
-					return /datum/wound/puncture/flesh
-				if(0 to 15)
-					return /datum/wound/puncture/small
 		if(BRUISE)
 			return /datum/wound/bruise
 		if(BURN)
@@ -264,9 +196,6 @@
 	return null //no wound
 
 /** CUTS **/
-/datum/wound/cut/bleeding()
-	return ..() && wound_damage() >= 5
-
 /datum/wound/cut/small
 	// link wound descriptions to amounts of damage
 	// Minor cuts have max_bleeding_stage set to the stage that bears the wound type's name.
@@ -274,69 +203,39 @@
 	max_bleeding_stage = 3
 	stages = list("ugly ripped cut" = 20, "ripped cut" = 10, "cut" = 5, "healing cut" = 2, "small scab" = 0)
 	damage_type = CUT
+	scar_type = "small scar"
 
 /datum/wound/cut/deep
 	max_bleeding_stage = 3
 	stages = list("ugly deep ripped cut" = 25, "deep ripped cut" = 20, "deep cut" = 15, "clotted cut" = 8, "scab" = 2, "fresh skin" = 0)
 	damage_type = CUT
+	scar_type = "scar"
 
 /datum/wound/cut/flesh
 	max_bleeding_stage = 4
 	stages = list("ugly ripped flesh wound" = 35, "ugly flesh wound" = 30, "flesh wound" = 25, "blood soaked clot" = 15, "large scab" = 5, "fresh skin" = 0)
 	damage_type = CUT
+	scar_type = "large scar"
 
 /datum/wound/cut/gaping
 	max_bleeding_stage = 3
 	stages = list("gaping wound" = 50, "large blood soaked clot" = 25, "blood soaked clot" = 15, "small angry scar" = 5, "small straight scar" = 0)
 	damage_type = CUT
+	scar_type = "small straight scar"
 
 /datum/wound/cut/gaping_big
 	max_bleeding_stage = 3
 	stages = list("big gaping wound" = 60, "healing gaping wound" = 40, "large blood soaked clot" = 25, "large angry scar" = 10, "large straight scar" = 0)
 	damage_type = CUT
+	scar_type = "large straight scar"
 
 datum/wound/cut/massive
 	max_bleeding_stage = 3
 	stages = list("massive wound" = 70, "massive healing wound" = 50, "massive blood soaked clot" = 25, "massive angry scar" = 10,  "massive jagged scar" = 0)
 	damage_type = CUT
-
-/** PUNCTURES **/
-/datum/wound/puncture/can_worsen(damage_type, damage)
-	return 0
-/datum/wound/puncture/can_merge(var/datum/wound/other)
-	return 0
-/datum/wound/puncture/bleeding()
-	return ..() && wound_damage() >= 5
-
-/datum/wound/puncture/small
-	max_bleeding_stage = 2
-	stages = list("puncture" = 5, "healing puncture" = 2, "small scab" = 0)
-	damage_type = PIERCE
-
-/datum/wound/puncture/flesh
-	max_bleeding_stage = 2
-	stages = list("puncture wound" = 15, "blood soaked clot" = 5, "large scab" = 2, "small round scar" = 0)
-	damage_type = PIERCE
-
-/datum/wound/puncture/gaping
-	max_bleeding_stage = 3
-	stages = list("gaping hole" = 30, "large blood soaked clot" = 15, "blood soaked clot" = 10, "small angry scar" = 5, "small round scar" = 0)
-	damage_type = PIERCE
-
-/datum/wound/puncture/gaping_big
-	max_bleeding_stage = 3
-	stages = list("big gaping hole" = 50, "healing gaping hole" = 20, "large blood soaked clot" = 15, "large angry scar" = 10, "large round scar" = 0)
-	damage_type = PIERCE
-
-datum/wound/puncture/massive
-	max_bleeding_stage = 3
-	stages = list("massive wound" = 60, "massive healing wound" = 30, "massive blood soaked clot" = 25, "massive angry scar" = 10,  "massive jagged scar" = 0)
-	damage_type = PIERCE
+	scar_type = "massive jagged scar"
 
 /** BRUISES **/
-/datum/wound/bruise/bleeding()
-	return ..() && wound_damage() >= 20
-
 /datum/wound/bruise
 	stages = list("monumental bruise" = 80, "huge bruise" = 50, "large bruise" = 30,
 				  "moderate bruise" = 20, "small bruise" = 10, "tiny bruise" = 5)
@@ -345,11 +244,6 @@ datum/wound/puncture/massive
 	damage_type = BRUISE
 
 /** BURNS **/
-/datum/wound/burn
-	max_bleeding_stage = 0
-/datum/wound/burn/bleeding()
-	return 0
-
 /datum/wound/burn/moderate
 	stages = list("ripped burn" = 10, "moderate burn" = 5, "healing moderate burn" = 2, "fresh skin" = 0)
 	damage_type = BURN

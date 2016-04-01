@@ -1,372 +1,395 @@
-var/list/organ_cache = list()
+//Layers - Specific organ based
+#define SKIN_LAYER 1			//Any external tissues
+#define FAT_LAYER 2				//Similar to the skin, "protective" but should cause more pain/bleeding
+#define MUSCLE_LAYER 3			//Real damage begins here
+#define CONNECTIVE_LAYER 4		//Connects parts together (tendons)
+#define STRUCTURE_LAYER 5		//Skeletal structure
+#define TISSUE_LAYER 6			//Mostly protective or cushioning muscles/fats around the organs
+#define INTERNAL_LAYER 7		//For organs (E.G. heart)
+#define INTERAL_TISSUE_LAYER 8	//Behind the organs, I guess.
+//Special damage types.
+#define SPECIAL_ELECTRIC 1 		// Does alot of internal damage
+#define SPECIAL_TOXIC 2	   		// Raises toxicity
+#define SPECIAL_MUTATION 3 		// Mutates
+#define SPECIAL_CORROSSIVE 4	// Burns through each layer entirely before continuing
+#define SPECIAL_PIERCE 5		// Pierces easily, causes bleeding
+#define SPECIAL_EXPLOSIVE 6		// Mostly surface damage
+#define SPECIAL_PROJECTILE 7	// Self-explanatory
+//Flags
+#define HAS_MINOR_ARTERY 1		// Adds a flat 2 to blood loss rate
+#define HAS_ARTERY 2			// Adds a flat 5 to blood loss rate
+#define HAS_MAJOR_ARTERY 4		// Adds a flat 10 to blood loss rate (Sometimes fatal.)
+#define CANNOT_SCAR	8			// Removes the possibility of scarring
+#define CANNOT_SWELL 16			// Excessive brute damage causes swelling. (Pain, layer damage, faster healing)
+#define CANNOT_BLISTER	 32		// Excessive burn damage causes blisters.  (Lots of pain, faster healing)
+
+
+
+
 
 /obj/item/organ
-	name = "organ"
-	icon = 'icons/obj/surgery.dmi'
-	var/dead_icon
-	var/mob/living/carbon/human/owner = null
-	var/status = 0
-	var/vital //Lose a vital limb, die immediately.
-	var/damage = 0 // amount of damage to the organ
+	name = "squishy blob"
+	desc = "A squishy blob, ew."
 
-	var/min_bruised_damage = 10
-	var/min_broken_damage = 30
-	var/max_damage
-	var/organ_tag = "organ"
+	var/list/damage_text = list()
+	damage_text["brute"] = list("It looks bruised!" = 25,\
+						   		"It looks heavily bruised!" = 50,\
+						   		"It looks torn apart!" = 75, \
+						   		"It has been pulped!" = 100)
+	damage_text["burn"] = list( "It looks slightly singed!" = 25,\
+								"It looks burned!" = 50,\
+								"It looks heavily burned!" = 75,\
+								"It looks like a pile of ash!" = 100)
+	damage_text["oxy"] = list(  "It looks lifeless" = 100)
+	damage_text["tox"] = list(  "It looks slightly green" = 33, \
+								"It looks extremely green" = 66, \
+								"It looks swollen and clotted" = 100)
+	var/scar_lower_threshold = 50//50% of max_structure
+	var/scar_upper_threshold = 90
 
-	var/parent_organ = "chest"
-	var/robotic = 0 //For being a robot
-	var/rejecting   // Is this organ already being rejected?
+	var/flags = 0
 
-	var/list/transplant_data
-	var/list/datum/autopsy_data/autopsy_data = list()
-	var/list/trace_chemicals = list() // traces of chemicals in the organ,
-									  // links chemical IDs to number of ticks for which they'll stay in the blood
-	germ_level = 0
-	var/datum/dna/dna
-	var/datum/species/species
+	var/list/default_tissues = list()
+	var/pain_receptors = 2 				// Multiplier
+	var/neural_receptors = 1 			// The more neural receptors, the higher chance of spasm and quicker recovery from spasms.
+	var/tissue_layer = FAT_LAYER+0.5 	// Comes into play when something is damaged.
+	var/blood_loss_rate = 0.5 			// Multiplier.
+	var/heal_rate = 1		  			// Multiplier
+	var/infection_resistance = 1 		// Multiplier
+	var/conductivity = 0				// Multiplier
+	var/brute_mod = 1					// Multiplier
+	var/burn_mod = 1					// Multiplier
+	// For a rough idea, bones are about 3.66g/cm^2, 5cm thick, 3.5dm long.
 
-/obj/item/organ/Destroy()
-	if(!owner)
-		return ..()
+	var/burn_potential = 1 // Multiplier for burn absorption
+	var/tensile_strength = 1 // Multiplier for brute absorption
 
-	if(istype(owner, /mob/living/carbon))
-		if((owner.internal_organs) && (src in owner.internal_organs))
-			owner.internal_organs -= src
-		if(istype(owner, /mob/living/carbon/human))
-			if((owner.internal_organs_by_name) && (src in owner.internal_organs_by_name))
-				owner.internal_organs_by_name -= src
-			if((owner.organs) && (src in owner.organs))
-				owner.organs -= src
-			if((owner.organs_by_name) && (src in owner.organs_by_name))
-				owner.organs_by_name -= src
-	if(src in owner.contents)
-		owner.contents -= src
+	var/relative_density = 1 //g/cm^2
+	var/relative_thickness = 1 //cm
+	var/relative_size = 1 // dm
+	var/material = "flesh"
 
-	return ..()
+	var/max_antibody_count = 10
 
-/obj/item/organ/proc/update_health()
-	return
+	var/list/functions = list()
+	var/message_cooldown = 0
+//	functions["example"]["efficiency"] = 100
 
-/obj/item/organ/New(var/mob/living/carbon/holder, var/internal)
-	..(holder)
-	create_reagents(5)
-	if(!max_damage)
-		max_damage = min_broken_damage * 2
-	if(istype(holder))
-		src.owner = holder
-		species = all_species["Human"]
-		if(holder.dna)
-			dna = holder.dna.Clone()
-			species = all_species[dna.species]
-		else
-			log_debug("[src] at [loc] spawned without a proper DNA.")
-		var/mob/living/carbon/human/H = holder
-		if(istype(H))
-			if(internal)
-				var/obj/item/organ/external/E = H.get_organ(parent_organ)
-				if(E)
-					if(E.internal_organs == null)
-						E.internal_organs = list()
-					E.internal_organs |= src
-			if(dna)
-				if(!blood_DNA)
-					blood_DNA = list()
-				blood_DNA[dna.unique_enzymes] = dna.b_type
-		if(internal)
-			holder.internal_organs |= src
-	update_icon()
 
-/obj/item/organ/proc/set_dna(var/datum/dna/new_dna)
-	if(new_dna)
-		dna = new_dna.Clone()
-		if(!blood_DNA)
-			blood_DNA = list()
-		blood_DNA.Cut()
-		blood_DNA[dna.unique_enzymes] = dna.b_type
-		species = all_species[new_dna.species]
+//Runtime variables. You shouldn't change these.
 
-/obj/item/organ/proc/die()
-	if(status & ORGAN_ROBOT)
-		return
-	damage = max_damage
-	status |= ORGAN_DEAD
-	processing_objects -= src
-	if(dead_icon)
-		icon_state = dead_icon
-	if(owner && vital)
-		owner.death()
+	var/structure = 100
+	var/max_structure = 100
+	var/list/infections = list()
+	var/datum/organ_controller/control
+	var/antibody_count = 0
+	var/efficiency = 100
+	var/needs_processing = 0
+	var/force_processing = 0 // Debug var
+	var/list/implants = list()
+	var/list/wounds = list()
+	var/bleeding = 0
+	var/bleeding_time = 0
+	var/bleeding_cycles = 0
+	var/heal_cycles = 0
+	var/obj/item/organ/holder_organ
+	var/list/organs = list()
+	var/burn_damage = 0
+	var/brute_damage = 0
+	var/list/autopsy_details = list()
+	var/list/tissues = list()
+	var/scar_damage = 0
+	var/list/scars = list()
+	var/open = 0
+	var/obj/item/weapon/bandage/bandage
 
-/obj/item/organ/process()
+	var/last_message = 0
 
-	if(loc != owner)
-		owner = null
-
-	//dead already, no need for more processing
-	if(status & ORGAN_DEAD)
-		return
-	// Don't process if we're in a freezer, an MMI or a stasis bag.or a freezer or something I dunno
-	if(istype(loc,/obj/item/device/mmi))
-		return
-	if(istype(loc,/obj/structure/closet/body_bag/cryobag) || istype(loc,/obj/structure/closet/crate/freezer) || istype(loc,/obj/item/weapon/storage/box/freezer))
-		return
-	//Process infections
-	if ((status & ORGAN_ROBOT) || (owner && owner.species && (owner.species.flags & IS_PLANT)))
-		germ_level = 0
-		return
-
-	if(!owner)
-		var/datum/reagent/blood/B = locate(/datum/reagent/blood) in reagents.reagent_list
-		if(B && prob(40))
-			reagents.remove_reagent("blood",0.1)
-			blood_splatter(src,B,1)
-		if(config.organs_decay) damage += rand(1,3)
-		if(damage >= max_damage)
-			damage = max_damage
-		germ_level += rand(2,6)
-		if(germ_level >= INFECTION_LEVEL_TWO)
-			germ_level += rand(2,6)
-		if(germ_level >= INFECTION_LEVEL_THREE)
-			die()
-
-	else if(owner && owner.bodytemperature >= 170)	//cryo stops germs from moving and doing their bad stuffs
-		//** Handle antibiotics and curing infections
-		handle_antibiotics()
-		handle_rejection()
-		handle_germ_effects()
-
-	//check if we've hit max_damage
-	if(damage >= max_damage)
-		die()
-
-/obj/item/organ/examine(mob/user)
-	..(user)
-	if(status & ORGAN_DEAD)
-		user << "<span class='notice'>The decay has set in.</span>"
-
-/obj/item/organ/proc/handle_germ_effects()
-	//** Handle the effects of infections
-	var/antibiotics = owner.reagents.get_reagent_amount("spaceacillin")
-
-	if (germ_level > 0 && germ_level < INFECTION_LEVEL_ONE/2 && prob(30))
-		germ_level--
-
-	if (germ_level >= INFECTION_LEVEL_ONE/2)
-		//aiming for germ level to go from ambient to INFECTION_LEVEL_TWO in an average of 15 minutes
-		if(antibiotics < 5 && prob(round(germ_level/6)))
-			germ_level++
-
-	if(germ_level >= INFECTION_LEVEL_ONE)
-		var/fever_temperature = (owner.species.heat_level_1 - owner.species.body_temperature - 5)* min(germ_level/INFECTION_LEVEL_TWO, 1) + owner.species.body_temperature
-		owner.bodytemperature += between(0, (fever_temperature - T20C)/BODYTEMP_COLD_DIVISOR + 1, fever_temperature - owner.bodytemperature)
-
-	if (germ_level >= INFECTION_LEVEL_TWO)
-		var/obj/item/organ/external/parent = owner.get_organ(parent_organ)
-		//spread germs
-		if (antibiotics < 5 && parent.germ_level < germ_level && ( parent.germ_level < INFECTION_LEVEL_ONE*2 || prob(30) ))
-			parent.germ_level++
-
-		if (prob(3))	//about once every 30 seconds
-			take_damage(1,silent=prob(30))
-
-/obj/item/organ/proc/handle_rejection()
-	// Process unsuitable transplants. TODO: consider some kind of
-	// immunosuppressant that changes transplant data to make it match.
-	if(dna)
-		if(!rejecting)
-			if(blood_incompatible(dna.b_type, owner.dna.b_type, species, owner.species))
-				rejecting = 1
-		else
-			rejecting++ //Rejection severity increases over time.
-			if(rejecting % 10 == 0) //Only fire every ten rejection ticks.
-				switch(rejecting)
-					if(1 to 50)
-						germ_level++
-					if(51 to 200)
-						germ_level += rand(1,2)
-					if(201 to 500)
-						germ_level += rand(2,3)
-					if(501 to INFINITY)
-						germ_level += rand(3,5)
-						owner.reagents.add_reagent("toxin", rand(1,2))
-
-/obj/item/organ/proc/receive_chem(chemical as obj)
-	return 0
-
-/obj/item/organ/proc/rejuvenate()
-	damage = 0
-
-/obj/item/organ/proc/is_damaged()
-	return damage > 0
-
-/obj/item/organ/proc/is_bruised()
-	return damage >= min_bruised_damage
-
-/obj/item/organ/proc/is_broken()
-	return (damage >= min_broken_damage || (status & ORGAN_CUT_AWAY) || (status & ORGAN_BROKEN))
-
-//Germs
-/obj/item/organ/proc/handle_antibiotics()
-	var/antibiotics = 0
-	if(owner)
-		antibiotics = owner.reagents.get_reagent_amount("spaceacillin")
-
-	if (!germ_level || antibiotics < 5)
-		return
-
-	if (germ_level < INFECTION_LEVEL_ONE)
-		germ_level = 0	//cure instantly
-	else if (germ_level < INFECTION_LEVEL_TWO)
-		germ_level -= 6	//at germ_level == 500, this should cure the infection in a minute
+/obj/item/organ/receive_damage(var/obj/W, var/brute, var/burn, var/brute_type = BRUTE, var/autopsy_desc, var/initbrute=0, var/initburn=0)// None of this is really that realistic, I know.
+	needs_processing = 1
+	if(!controller.damage_processing) return
+	update_structure()
+	if(!initbrute) initbrute = brute
+	if(!initburn) initburn = burn
+	var/brute_absorption = 0
+	//Cuts are not affected by thickness, and so get through skin and the like extremely easily.
+	if(brute_type == BRUTE)
+		brute_absorption = relative_density/0.25 *relative_thickness * structure/max_structure * tensile_strength * 0.01 // Reduce it to a percentage
 	else
-		germ_level -= 2 //at germ_level == 1000, this will cure the infection in 5 minutes
+		brute_absorption = relative_density/0.08 * structure/max_structure * tensile_strength * 0.01
+	var/heat_absorption =relative_size/0.5 *relative_thickness * structure/max_structure * burn_potential * 0.01 // Heat often spreads evenly.
+	var/brute_d = initbrute*brute_absorption
+	var/burn_d = initburn*burn_absorption
+	var/list/remainder = take_damage(W, min(brute_d,brute), min(burn_d,burn), autopsy_desc)
+	brute -= (brute_d - remainder["brute"])
+	burn -= (burn_d - remainder["burn"])
+	if(!brute && !burn)
+		return 0
+	var/obj/item/organ/O = pick_lower_layer(tissue_layer, 1)
+	if(!O)
+		O = get_highest_layer()
+		O.take_damage(W, brute, burn, brute_type, autopsy_desc, 0) // The first layer (presumably skin) is forced to take the remaining damage.
 
-//Adds autopsy data for used_weapon.
-/obj/item/organ/proc/add_autopsy_data(var/used_weapon, var/damage)
-	var/datum/autopsy_data/W = autopsy_data[used_weapon]
-	if(!W)
-		W = new()
-		W.weapon = used_weapon
-		autopsy_data[used_weapon] = W
-
-	W.hits += 1
-	W.damage += damage
-	W.time_inflicted = world.time
-
-//Note: external organs have their own version of this proc
-/obj/item/organ/proc/take_damage(amount, var/silent=0)
-	if(src.status & ORGAN_ROBOT)
-		src.damage = between(0, src.damage + (amount * 0.8), max_damage)
 	else
-		src.damage = between(0, src.damage + amount, max_damage)
+		O.receive_damage(W, brute, burn, brute_type, autopsy_desc, initbrute, initburn)
 
-		//only show this if the organ is not robotic
-		if(owner && parent_organ && amount > 0)
-			var/obj/item/organ/external/parent = owner.get_organ(parent_organ)
-			if(parent && !silent)
-				owner.custom_pain("Something inside your [parent.name] hurts a lot.", 1)
+/obj/item/organ/proc/take_damage(var/obj/W, var/brute, var/burn, var/brute_type = BRUTE, var/autopsy_desc, var/remainder = 1)
+	if(!controller.damage_processing) return
+	var/brute_d = brute * brute_mod
+	var/burn_d = burn * burn_mod
+	if(!istype(src, /obj/item/organ/tissue) && open)
+		for(var/obj/item/organ/tissue/T in tissues)
+			if(prob((brute+burn) * T.size))
+				var/list/absorbed = T.absorb_damage(src, W, brute, burn, brute_type, autopsy_desc))
+				brute_d -= absorbed["brute"]
+				burn_d -= absorbed["burn"]
+	if(!open && !istype(src, /obj/item/organ/tissue), brute_type == CUT && structure < max_structure/2 && brute > structure/10)
+		rip_open()
+	if(brute && control.blood_loss)
+		var/blood_loss = brute
+		var/P = brute
+		var/cycles = 1
+		if(brute_type == CUT)
+			P*=2
+			cycles = 5
+		switch(flags)
+			if(HAS_MINOR_ARTERY)
+				if(prob(P)) blood_loss+=2
+			if(HAS_ARTERY)
+				if(prob(P)) blood_loss+=5
+			if(HAS_MAJOR_ARTERY)
+				if(prob(P)) blood_loss+=10
+		if(brute_type == BRUTE)
+			if(brute >= 10)
+				blood_loss /= 2
+			else blood_loss = 0
+		else blood_loss *= 1.5
+		blood_loss *= blood_loss_rate
+		bleeding = blood_loss
+		bleeding_cycles = cycles * brute
 
-/obj/item/organ/proc/bruise()
-	damage = max(damage, min_bruised_damage)
+	var/count = 1
+	if(autopsy_desc in autopsy_details)
+		count = autopsy_details[autopsy_desc][count]
+		count++
+	autopsy_details["[autopsy_desc]"] = list("time" = worldtime2text, "brute" = brute_d, "burn" = burn_d, "count" = count)
+	update_scars()
+	if(remainder)
+		return list("brute" = brute_d, "burn" = burn_d)
+	var/obj/item/organ/O = pick_lower_layer(tissue_layer, 1)
+	if(!O) return
+	O.receive_damage(W, brute_d, burn_d, autopsy_desc)
 
-/obj/item/organ/proc/robotize() //Being used to make robutt hearts, etc
-	robotic = 2
-	src.status &= ~ORGAN_BROKEN
-	src.status &= ~ORGAN_BLEEDING
-	src.status &= ~ORGAN_SPLINTED
-	src.status &= ~ORGAN_CUT_AWAY
-	src.status |= ORGAN_ROBOT
-	src.status |= ORGAN_ASSISTED
+/obj/item/organ/proc/receive_special_damage(var/obj/W, var/special_damage = 0, var/special_effect = 0, var/autopsy_desc, var/init_special)
+	if(special_damage && special_effect)
+		update_structure()
+		var/start = 0
+		if(!init_special)
+			init_special = special_damage
+			start = 1
+		switch(special_effect)
+			if(SPECIAL_ELECTRIC)
+				if(start)
+					controller.electric_current(init_special)
+				var/absorb =relative_size/0.5*thickness*(structure/max_structure)//50% of heat absorption
+				absorb *= conductivity
+				if(prob(absorb))
+					spasm()
+					controller.check_organs(src)
+				special_damage -= init_special*absorb
+				if(!special_damage) return
+				var/obj/item/organ/O = pick_lower_layer(tissue_layer, 1)
+				if(!O)
+					controller.electric_current(init_special) // If it goes all the way down, another shock incoming.
+					O = get_highest_layer()
+					O.take_damage(W, 0, special_damage, autopsy_desc, 0) // The rest gets burnt.
+				else
+					O.receive_special_damage(W, special_damage, special_effect, autopsy_desc, init_special)
+			if(SPECIAL_TOXIC)
+			if(SPECIAL_MUTATION)
+			if(SPECIAL_CORROSIVE)
+				var/list/remainder = take_damage(W, special_damage*0.33, special_damage*0.66, autopsy_desc)
+				special_damage = 0
+				special_damage += (remainder["brute"] + remainder["burn"])
+				var/obj/item/organ/O = pick_lower_layer(tissue_layer, 1)
+				if(O) // There shouldn't be any "upper layer".
+					O.receive_special_damage(W, special_damage, special_effect, autopsy_desc, init_special)
+			if(SPECIAL_PIERCE)
+				var/modifified_density = 0
+				if(relative_density*6 > special_damage) // E.G. In order to pierce through most bones, the damage must be >22
+					modified_density = relative_density
+				else modified_density = relative_density/4
+				var/absorption = modified_density/0.05*relative_thickness/7.5 * structure/max_structure * tensile_strength * 0.01
+				//It'll easily pierce through most soft things like skin, muscle and fat with ease.
+				var/dam = init_special*brute_absorption
+				var/list/remainder = take_damage(W, min(special_damage, dam), 0, autopsy_desc)
+				special_damage -= (dam - remainder["brute"])
+				if(!special_damage)
+					return 0
+				var/obj/item/organ/O = pick_lower_layer(tissue_layer, 1)
+				if(!O)
+					O = get_highest_layer()
+					O.take_damage(W, special_damage, burn, autopsy_desc, 0)
+				else
+					O.receive_special_damage(W, special_damage, special_effect, autopsy_desc, init_special)
+			if(SPECIAL_EXPLOSIVE)
+			if(SPECIAL_PROJECTILE)
 
-/obj/item/organ/proc/mechassist() //Used to add things like pacemakers, etc
-	robotize()
-	src.status &= ~ORGAN_ROBOT
-	robotic = 1
-	min_bruised_damage = 15
-	min_broken_damage = 35
 
-/obj/item/organ/emp_act(severity)
-	if(!(status & ORGAN_ROBOT))
-		return
-	switch (severity)
-		if (1)
-			take_damage(9)
-		if (2)
-			take_damage(3)
-		if (3)
-			take_damage(1)
+/obj/item/organ/proc/update_structure()
+	max_structure = initial(max_structure) -= scar_damage
+	structure = min(round(relative_size *relative_thickness *relative_density), max_structure)
+	structure -= (brute_damage + burn_damage)
 
-/obj/item/organ/proc/removed(var/mob/living/user)
 
-	if(!istype(owner))
-		return
+/obj/item/organ/proc/process()
+	update_structure()
+	if(bleeding)
+		bleeding_time -= 1
+		if(bleeding_time <= 0)
+			var/cycle_reduce = 1
+			var/reduced = round(bleeding / bleeding_cycles) * 100
+			if(bandage)
+				cycle_reduce *= (1+bandage.recovery*0.01) * (1-bandage.pressure*0.005)
+				reduced *= (1+bandage.recovery*0.01) * (1-bandage.pressure*0.005)
+			bleeding_time = bleeding_cycles * (1+bandage.pressure*1.5)
+		if(bleeding < 1)
+			bleeding = 0
+			bleeding_cycles = 0
+		var/blood_to_lose = bleeding
+		if(bandage)
+			if(!bandage.dirty && bandage.absorbed >= bandage.max_absorbed)
+				bandage.dirty = 1
+				bandage.name = "dirty [initial(bandage.name)]"
+				bandage.coverage = 0
+				bandage.recovery /= 3
+				bandage.pressure /= 3
+				bandage.thickness = min(bandage.thickness/2, 30)
+				bandage.absorption /= 2
+			var/saved = 0.3 + (bandage.recovery*0.01)
+			var/remaining = 1 - saved
+			var/lost = (remaining *0.45) //TODO:Check ratios
+			var/absorb = (remaining * 0.55)
+			var/absorbed = (blood_to_lose - min(bandage.absorption, blood_to_lose/(bandage.thickness*0.01))
+			bandage.absorbed += absorbed * absorb
+			blood_to_lose -= absorbed*saved
+			blood_to_lose *= (1-(bandage.pressure*0.01))
+		lose_blood(blood_to_lose)
+	else if(structure < max_structure) // Proliferation.
+		bleeding_time -= 1
+		if(bleeding_time <= 0)
+			if(bandage)
+				structure = min(maxstructure, structure + (round(max_structure/100, 0.1) * (1+bandage.recovery*0.01) * heal_rate))
+			else structure = min(maxstructure, structure + (1*heal_rate))
+			if(prob(5))
+				display_message("<span class='warning'>Your [external_organ()] feels itchy</span>")
 
-	owner.internal_organs_by_name[organ_tag] = null
-	owner.internal_organs_by_name -= organ_tag
-	owner.internal_organs_by_name -= null
-	owner.internal_organs -= src
+/obj/item/organ/proc/pick_lower_layer(var/tissue_layer = FAT_LAYER, var/max_layers = 1)
+	var/list/lower_organs = get_lower_layer(tissue_layer, max_layers)
+	if(!lower_organs.len) return 0
+	var/total_size = 0
+	for(var/obj/item/organs/O in lower_organs)
+		total_size += O.relevant_size
+	for(var/obj/item/organs/O in lower_organs)
+		if(prob(round(O.size / total_size) * 100))
+			return O
+	return pick(lower_organs)
 
-	var/obj/item/organ/external/affected = owner.get_organ(parent_organ)
-	if(affected) affected.internal_organs -= src
 
-	loc = get_turf(owner)
-	processing_objects |= src
-	rejecting = null
-	var/datum/reagent/blood/organ_blood = locate(/datum/reagent/blood) in reagents.reagent_list
-	if(!organ_blood || !organ_blood.data["blood_DNA"])
-		owner.vessel.trans_to(src, 5, 1, 1)
+/obj/item/organ/proc/get_lower_layer(var/tissue_layer = FAT_LAYER, var/max_layers = 1)
+	var/list/lower_organs = list()
+	for(var/obj/item/organ/O in holder_organ.organs)
+		if(O.tissue_layer >= tissue_layer && O.tissue_layer <= tissue_layer+1)
+			lower_organs += O
+	return lower_organs
 
-	if(owner && vital)
-		if(user)
-			user.attack_log += "\[[time_stamp()]\]<font color='red'> removed a vital organ ([src]) from [owner.name] ([owner.ckey]) (INTENT: [uppertext(user.a_intent)])</font>"
-			owner.attack_log += "\[[time_stamp()]\]<font color='orange'> had a vital organ ([src]) removed by [user.name] ([user.ckey]) (INTENT: [uppertext(user.a_intent)])</font>"
-			msg_admin_attack("[user.name] ([user.ckey]) removed a vital organ ([src]) from [owner.name] ([owner.ckey]) (INTENT: [uppertext(user.a_intent)]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
-		owner.death()
-
-	owner = null
-
-/obj/item/organ/proc/replaced(var/mob/living/carbon/human/target,var/obj/item/organ/external/affected)
-
-	if(!istype(target)) return
-
-	var/datum/reagent/blood/transplant_blood = locate(/datum/reagent/blood) in reagents.reagent_list
-	transplant_data = list()
-	if(!transplant_blood)
-		transplant_data["species"] =    target.species.name
-		transplant_data["blood_type"] = target.dna.b_type
-		transplant_data["blood_DNA"] =  target.dna.unique_enzymes
-	else
-		transplant_data["species"] =    transplant_blood.data["species"]
-		transplant_data["blood_type"] = transplant_blood.data["blood_type"]
-		transplant_data["blood_DNA"] =  transplant_blood.data["blood_DNA"]
-
-	owner = target
-	loc = owner
-	processing_objects -= src
-	target.internal_organs |= src
-	affected.internal_organs |= src
-	target.internal_organs_by_name[organ_tag] = src
-	if(robotic)
-		status |= ORGAN_ROBOT
-
-/obj/item/organ/eyes/replaced(var/mob/living/carbon/human/target)
-
-	// Apply our eye colour to the target.
-	if(istype(target) && eye_colour)
-		target.r_eyes = eye_colour[1]
-		target.g_eyes = eye_colour[2]
-		target.b_eyes = eye_colour[3]
-		target.update_eyes()
+/obj/item/organ/New(var/obj/item/organ/O)
+	if(O)
+		holder_organ = O
+		if(istype(src, /obj/item/organ/tissue))
+			holder_organ.tissues += src
+		else holder_organ.organs += src
+	update_structure()
+	init()
 	..()
 
-/obj/item/organ/proc/bitten(mob/user)
+/obj/item/organ/proc/init()
+	if(!O.tissues.len && !istype(src, /obj/item/organ/tissue))
+		for(var/T in default_tissues)
+			var/num = default_tissues[T]
+			while(num)
+				T = new(src)
 
-	if(robotic)
+/obj/item/organ/proc/spasm(var/damage = 0)
+	efficiency += rand(0, neural_receptors)
+	efficiency -= rand(0, damage)
+	if(prob(damage*1.5))
+		damage--
+	if(efficiency >= maxefficiency) // Sometimes going *above* maxefficiency for a little while is purposeful.
+		efficiency = maxefficiency  // Let the controller sort it out!
 		return
+	spawn(rand(10,600)) // 10-60 seconds between spasms
+		spasm(damage)
 
-	user << "\blue You take an experimental bite out of \the [src]."
-	var/datum/reagent/blood/B = locate(/datum/reagent/blood) in reagents.reagent_list
-	blood_splatter(src,B,1)
+/obj/item/organ/proc/update_scars()
+	scar_damage = 0
+	for(var/datum/scar/S in scars)
+		scar_damage += S.damage
+	var/datum/scar/scar
+	if(structure < (max_structure*scar_upper_threshold*0.01)*100)
+		if(burn_damage > brute_damage)
+			scar = new(min(burn_damage, 20), BURN, src)
+			burn_damage -= min(burn_damage, 20)
+		else
+			scar = new(min(brute_damage,20), BRUTE, src)
+			brute_damage -= min(brute_damage, 20)
+	else if(structure < max_structure*scar_lower_threshold*0.01)
+		var/over = (burn_damage+brute_damage) - (max_structure*scar_lower_threshold*0.01)
+		var/difference = scar_lower_threshold / scar_upper_threshold
+		if(prob(over * difference))
+			if(burn_damage > brute_damage)
+				scar = new(min(burn_damage, 20), BURN, src)
+				burn_damage -= min(burn_damage, 20)
+			else
+				scar = new(min(brute_damage,20), BRUTE, src)
+				brute_damage -= min(brute_damage, 20)
+	if(scar)
+		update_structure()
+		for(var/datum/scar/S in scars)
+			if(scars.len <= 3)
+				if(S == scar) continue
+				if(S.damtype != scar.damtype) continue
+				(S.damage + scar.damage >= 25) continue
+				S.damage += scar.damage
+				del(scar)
+			return
+		scars.Add(scar)
+		scar_damage += scar.damage
 
-	user.drop_from_inventory(src)
-	var/obj/item/weapon/reagent_containers/food/snacks/organ/O = new(get_turf(src))
-	O.name = name
-	O.icon = icon
-	O.icon_state = icon_state
+/obj/item/organ/proc/rip_open()
+	display_message("<span class='danger'><BIG>You feel something in your [external_organ()] rip apart!</BIG></span>",\
+				    "<span class='danger'>[control.holder]'s [src] is ripped open in a spray of blood!</span>")
+	bleeding += 5 * blood_loss_rate
+	open = 1
 
-	// Pass over the blood.
-	reagents.trans_to(O, reagents.total_volume)
+/obj/item/organ/proc/apply_bandage(var/obj/item/weapon/bandage/B, var/mob/user)
+	user.visible_message("<span class='notice'>[user] begins applying \the [B] to [control.holder]'s [src]</span>", "<span class='notice'>You begin applying \the [B] to [control.holder]'s [src].</span>")
+	if(!do_after(user, 150)) return 0
+	bandage = B
+	user.drop_item()
+	B.loc = src
+	B.put_on = world.time
 
-	if(fingerprints) O.fingerprints = fingerprints.Copy()
-	if(fingerprintshidden) O.fingerprintshidden = fingerprintshidden.Copy()
-	if(fingerprintslast) O.fingerprintslast = fingerprintslast
 
-	user.put_in_active_hand(O)
-	qdel(src)
 
-/obj/item/organ/attack_self(mob/user as mob)
 
-	// Convert it to an edible form, yum yum.
-	if(!robotic && user.a_intent == I_HELP && user.zone_sel.selecting == "mouth")
-		bitten(user)
-		return
+
+
+
+
+
+
+
+
+
+
