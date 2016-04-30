@@ -30,7 +30,7 @@
 	can_scar = 0
 
 	pain_receptors = 0.4
-	neural_receptors = 0.2 // I guess the lungs can spasm?
+	neural_receptors = 0.5 // I guess the lungs can spasm?
 	tissue_layer = INTERNAL_LAYER
 	blood_loss_rate = 0.8
 	heal_rate = 0

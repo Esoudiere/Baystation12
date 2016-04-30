@@ -15,6 +15,8 @@
 	var/damage_processing = 1
 	var/blood_loss = 1
 
+	var/list/tissues = list()
+
 
 	var/list/functions = list()
 	functions["breathing"] = list("efficiency" = 100)
@@ -54,7 +56,7 @@
 				   	organs_to_process.Add(O)
 				if(O.infections.len)
 					infected_organs.Add(O)
-		else if(!(to_check in organs_to_process || to_check in infected_organs))
+		else if(!(to_check in organs_to_process && to_check in infected_organs))
 			if(to_check.force_processing||\
 			   to_check.efficiency < max_efficiency||\
 			   to_check.needs_processing||\
@@ -75,6 +77,9 @@
 		organs_to_process.Cut(1,2)
 		if(O.process()) // If it still needs processing, append it to the list.
 			organs_to_process.Add(O)
+
+	proc/update_functions()
+		for(var
 
 
 

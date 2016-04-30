@@ -1534,6 +1534,7 @@
 #include "code\modules\organs\blood.dm"
 #include "code\modules\organs\controller.dm"
 #include "code\modules\organs\damage.dm"
+#include "code\modules\organs\helpers.dm"
 #include "code\modules\organs\medical_equipment.dm"
 #include "code\modules\organs\organ.dm"
 #include "code\modules\organs\organ_internal.dm"

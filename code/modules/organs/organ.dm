@@ -12,13 +12,13 @@
 #define SPECIAL_TOXIC 2	   		// Raises toxicity
 #define SPECIAL_MUTATION 3 		// Mutates
 #define SPECIAL_CORROSSIVE 4	// Burns through each layer entirely before continuing
-#define SPECIAL_PIERCE 5		// Pierces easily, causes bleeding
+#define SPECIAL_PIERCE 5		// Pierces easily.
 #define SPECIAL_EXPLOSIVE 6		// Mostly surface damage
 #define SPECIAL_PROJECTILE 7	// Self-explanatory
 //Flags
 #define HAS_MINOR_ARTERY 1		// Adds a flat 2 to blood loss rate
 #define HAS_ARTERY 2			// Adds a flat 5 to blood loss rate
-#define HAS_MAJOR_ARTERY 4		// Adds a flat 10 to blood loss rate (Sometimes fatal.)
+#define HAS_MAJOR_ARTERY 4		// Adds a flat 10 to blood loss rate (Sometimes fatal just on its own.)
 #define CANNOT_SCAR	8			// Removes the possibility of scarring
 #define CANNOT_SWELL 16			// Excessive brute damage causes swelling. (Pain, layer damage, faster healing)
 #define CANNOT_BLISTER	 32		// Excessive burn damage causes blisters.  (Lots of pain, faster healing)
@@ -39,7 +39,7 @@
 	damage_text["burn"] = list( "It looks slightly singed!" = 25,\
 								"It looks burned!" = 50,\
 								"It looks heavily burned!" = 75,\
-								"It looks like a pile of ash!" = 100)
+								"It looks scorched and black!" = 100)
 	damage_text["oxy"] = list(  "It looks lifeless" = 100)
 	damage_text["tox"] = list(  "It looks slightly green" = 33, \
 								"It looks extremely green" = 66, \
@@ -69,6 +69,8 @@
 	var/relative_size = 1 // dm
 	var/material = "flesh"
 
+	var/efficiency = 100
+
 	var/max_antibody_count = 10
 
 	var/list/functions = list()
@@ -76,7 +78,7 @@
 //	functions["example"]["efficiency"] = 100
 
 
-//Runtime variables. You shouldn't change these.
+//Runtime variables. You shouldn't need to change these.
 
 	var/structure = 100
 	var/max_structure = 100
@@ -143,7 +145,7 @@
 				var/list/absorbed = T.absorb_damage(src, W, brute, burn, brute_type, autopsy_desc))
 				brute_d -= absorbed["brute"]
 				burn_d -= absorbed["burn"]
-	if(!open && !istype(src, /obj/item/organ/tissue), brute_type == CUT && structure < max_structure/2 && brute > structure/10)
+	if(!open && !istype(src, /obj/item/organ/tissue) && (brute_type == CUT || brute > 10)  && structure < max_structure/2 && brute > structure/10)
 		rip_open()
 	if(brute && control.blood_loss)
 		var/blood_loss = brute
@@ -200,13 +202,12 @@
 				if(!special_damage) return
 				var/obj/item/organ/O = pick_lower_layer(tissue_layer, 1)
 				if(!O)
-					controller.electric_current(init_special) // If it goes all the way down, another shock incoming.
 					O = get_highest_layer()
 					O.take_damage(W, 0, special_damage, autopsy_desc, 0) // The rest gets burnt.
 				else
 					O.receive_special_damage(W, special_damage, special_effect, autopsy_desc, init_special)
-			if(SPECIAL_TOXIC)
-			if(SPECIAL_MUTATION)
+//			if(SPECIAL_TOXIC)
+//			if(SPECIAL_MUTATION)
 			if(SPECIAL_CORROSIVE)
 				var/list/remainder = take_damage(W, special_damage*0.33, special_damage*0.66, autopsy_desc)
 				special_damage = 0
@@ -232,8 +233,8 @@
 					O.take_damage(W, special_damage, burn, autopsy_desc, 0)
 				else
 					O.receive_special_damage(W, special_damage, special_effect, autopsy_desc, init_special)
-			if(SPECIAL_EXPLOSIVE)
-			if(SPECIAL_PROJECTILE)
+//			if(SPECIAL_EXPLOSIVE)
+//			if(SPECIAL_PROJECTILE)
 
 
 /obj/item/organ/proc/update_structure()
@@ -241,9 +242,7 @@
 	structure = min(round(relative_size *relative_thickness *relative_density), max_structure)
 	structure -= (brute_damage + burn_damage)
 
-
-/obj/item/organ/proc/process()
-	update_structure()
+/obj/item/organ/proc/handle_bleeding()
 	if(bleeding)
 		bleeding_time -= 1
 		if(bleeding_time <= 0)
@@ -262,13 +261,18 @@
 				bandage.dirty = 1
 				bandage.name = "dirty [initial(bandage.name)]"
 				bandage.coverage = 0
-				bandage.recovery /= 3
-				bandage.pressure /= 3
-				bandage.thickness = min(bandage.thickness/2, 30)
-				bandage.absorption /= 2
+			if(bandage.dirty) // Eventually wont help at all.
+				if(bandage.recovery > 0) // Possible for negative values
+					bandage.recovery = round(bandage.recovery / 1.5)
+				if(bandage.pressure)
+					bandage.pressure = round(bandage.pressure / 1.5)
+				if(bandage.thickness)
+					bandage.thickness = round(bandage.thickness / 1.25)
+				if(bandage.absorption)
+					bandage.absorption = round(bandage.absorption / 1.25)
 			var/saved = 0.3 + (bandage.recovery*0.01)
 			var/remaining = 1 - saved
-			var/lost = (remaining *0.45) //TODO:Check ratios
+			var/lost = (remaining *0.45) //TODO:Balance ratios
 			var/absorb = (remaining * 0.55)
 			var/absorbed = (blood_to_lose - min(bandage.absorption, blood_to_lose/(bandage.thickness*0.01))
 			bandage.absorbed += absorbed * absorb
@@ -282,26 +286,19 @@
 				structure = min(maxstructure, structure + (round(max_structure/100, 0.1) * (1+bandage.recovery*0.01) * heal_rate))
 			else structure = min(maxstructure, structure + (1*heal_rate))
 			if(prob(5))
-				display_message("<span class='warning'>Your [external_organ()] feels itchy</span>")
+				display_message("<span class='warning'>Your [external_organ()] feels itchy.</span>")
+				if(prob(50))
+					itch()
 
-/obj/item/organ/proc/pick_lower_layer(var/tissue_layer = FAT_LAYER, var/max_layers = 1)
-	var/list/lower_organs = get_lower_layer(tissue_layer, max_layers)
-	if(!lower_organs.len) return 0
-	var/total_size = 0
-	for(var/obj/item/organs/O in lower_organs)
-		total_size += O.relevant_size
-	for(var/obj/item/organs/O in lower_organs)
-		if(prob(round(O.size / total_size) * 100))
-			return O
-	return pick(lower_organs)
+			bleeding_time = (bandage ? min(1, 300 -= bandage.recovery) : 300)
 
+/obj/item/organ/proc/process()
+	update_structure()
+	handle_bleeding
 
-/obj/item/organ/proc/get_lower_layer(var/tissue_layer = FAT_LAYER, var/max_layers = 1)
-	var/list/lower_organs = list()
-	for(var/obj/item/organ/O in holder_organ.organs)
-		if(O.tissue_layer >= tissue_layer && O.tissue_layer <= tissue_layer+1)
-			lower_organs += O
-	return lower_organs
+/obj/item/organ/proc/itch()
+	return 1
+
 
 /obj/item/organ/New(var/obj/item/organ/O)
 	if(O)
@@ -314,21 +311,25 @@
 	..()
 
 /obj/item/organ/proc/init()
-	if(!O.tissues.len && !istype(src, /obj/item/organ/tissue))
-		for(var/T in default_tissues)
-			var/num = default_tissues[T]
-			while(num)
-				T = new(src)
+	for(var/obj/item/organ/tissue/T in controller.tissues)
+		if(T.type in src.default_tissues)
+			src.tissues += T
+//	if(!O.tissues.len && !istype(src, /obj/item/organ/tissue))
+//		for(var/T in default_tissues)
+//			var/num = default_tissues[T]
+//			while(num)
+//				T = new(src)
 
 /obj/item/organ/proc/spasm(var/damage = 0)
+	if(!damage) return
 	efficiency += rand(0, neural_receptors)
 	efficiency -= rand(0, damage)
 	if(prob(damage*1.5))
 		damage--
-	if(efficiency >= maxefficiency) // Sometimes going *above* maxefficiency for a little while is purposeful.
-		efficiency = maxefficiency  // Let the controller sort it out!
-		return
-	spawn(rand(10,600)) // 10-60 seconds between spasms
+//	if(efficiency >= maxefficiency) // Sometimes going *above* maxefficiency for a little while is purposeful.
+//		efficiency = maxefficiency
+//		return
+	spawn(rand(10,600)) // 1-60 seconds between spasms
 		spasm(damage)
 
 /obj/item/organ/proc/update_scars()
@@ -356,7 +357,7 @@
 	if(scar)
 		update_structure()
 		for(var/datum/scar/S in scars)
-			if(scars.len <= 3)
+			if(scars.len)
 				if(S == scar) continue
 				if(S.damtype != scar.damtype) continue
 				(S.damage + scar.damage >= 25) continue
@@ -366,10 +367,10 @@
 		scars.Add(scar)
 		scar_damage += scar.damage
 
-/obj/item/organ/proc/rip_open()
+/obj/item/organ/proc/rip_open(var/external = 1)
 	display_message("<span class='danger'><BIG>You feel something in your [external_organ()] rip apart!</BIG></span>",\
-				    "<span class='danger'>[control.holder]'s [src] is ripped open in a spray of blood!</span>")
-	bleeding += 5 * blood_loss_rate
+				    "[external ? "<span class='danger'>[control.holder]'s [src] is ripped open in a spray of blood!</span>" : ""]")
+	bleeding += 5 * size * blood_loss_rate
 	open = 1
 
 /obj/item/organ/proc/apply_bandage(var/obj/item/weapon/bandage/B, var/mob/user)
