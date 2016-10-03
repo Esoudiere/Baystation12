@@ -1,4 +1,5 @@
 /obj/item/weapon/gun/energy/advanced/proc/medical_scan(var/mob/living/carbon/human/H)
+	if(shutdown != 0) return
 	if(H)
 		if(intelligun_status & INTELLIGUN_ANALYZING)
 			src.speak("<span class='warning'>Processing previous analysis! Please wait.</span>")
@@ -8,7 +9,7 @@
 		if(get_dist(src, H) > 3)
 			src.speak("<span class='warning'>Unable to initiate scan. Distance too great.</span>")
 			return
-		if(shutdown)
+		if(shutdown != 0)
 			return
 		if(medical_data.len >= 50)
 			src.speak("<span class='notice'>Removing previous medical records</span>")
@@ -19,7 +20,7 @@
 			return
 		intelligun_status |= INTELLIGUN_ANALYZING
 		spawn(15)
-			if(!can_use_charge(60)) return
+			if(!can_use_charge(30)) return
 			src.speak("<span class='notice'>Current Status: [H.stat > 1 ? "<span class='warning'>dead</span>" : "[H.health]% healthy"]</span>")
 			medical_data += "<b>Scan Results for: [H]</b><br><hr><br>"
 			medical_data += "<span class='notice'>Overall Status: [H.stat > 1 ? "<span class='warning'>dead</span>" : "[H.health]% healthy"]</span><br>"
@@ -93,12 +94,16 @@
 						symptoms += ":<span class='notice'>  Recommendation: See a doctor!</span>"
 						src.speak("[diagnosis] : [symptoms]", 0)
 						medical_data += "<br><br><hr><br><br>"
+						if(H.name == owner && H.health < 50)
+							backup()
+						if(H.health <= 0)
+							call_medic()
 						intelligun_status &= ~INTELLIGUN_ANALYZING
 			else
 				intelligun_status &= ~INTELLIGUN_ANALYZING
 
 /obj/item/weapon/gun/energy/advanced/proc/analyze(var/mob/user, var/message as text)
-	if(shutdown) return
+	if(shutdown != 0) return
 	if(!user && usr) user = usr
 	else if(!usr)
 		src.speak("<span class='danger'>Error!</span>")
@@ -121,18 +126,33 @@
 		return
 	medical_scan(target)
 
+/obj/item/weapon/gun/energy/advanced/proc/call_medic(var/mob/user)
+	if(shutdown != 0) return
+	var/area/A = get_area(src)
+	var/location = A.name
+	if(prob(102 - reliability))
+		location = pick("Candy Land", "Space", "%ʤzrt", "A smelly pile of garbage")
+	var/N
+	if(owner) N = owner
+	else if(user) N = user
+	else N = ai_name
+	src.speak("<span class='warning'>This is [N] requesting emergency medical aid at the location of: [location] immediatley.</span>", 1)
+	radio.autosay("This is [N] requesting emergency medical aid at the location of: [location] immediately.", ai_name, "Medical")
+
+
 /obj/item/weapon/gun/energy/advanced/proc/health(var/mob/living/carbon/human/M)
+	if(shutdown != 0) return
 	medical_scan(M)
 
 /obj/item/weapon/gun/energy/advanced/proc/lock_weapon()
-	if(shutdown) return
+	if(shutdown != 0) return
 	if(intelligun_status & INTELLIGUN_LOCKED)
 		intelligun_status &= ~INTELLIGUN_LOCKED
 	else intelligun_status |= INTELLIGUN_LOCKED
 	src.speak("Controls [intelligun_status & INTELLIGUN_LOCKED ? "" : "un"]locked")
 
 /obj/item/weapon/gun/energy/advanced/proc/arrest(var/mob/user, var/message as message, var/forceful = 0)
-	if(shutdown) return
+	if(shutdown != 0) return
 	if(!can_use_charge(50)) return
 	var/mob/living/carbon/human/target = find_said_name(message, user)
 	var/list/humans = list()
@@ -223,10 +243,10 @@
 			src.speak("<span class='warning'>Error. Unable to find associated security record.</span>")
 
 /obj/item/weapon/gun/energy/advanced/proc/shutdown_weapon()
-	if(shutdown == -1) return
+	if(shutdown == -1 || shutdown == 1) return
 	shutdown = -1
 	src.speak("<span class='notice'>Beginning shutdown..</span>", 0, 1)
-	spawn(rand(20, 450))
+	spawn(rand(10,50))
 		src.speak("<span class='notice'>Shutdown complete.</span>", 0, 1)
 		shutdown = 1
 
@@ -237,7 +257,7 @@
 		return
 	src.speak("Beginning startup..", 0, 1)
 	shutdown = -1
-	spawn(rand(20, 450))
+	spawn(rand(10,50))
 		if(prob(100 - reliability))
 			src.speak("<span class='warning'>Error.</span>", 0, 1)
 			if(prob(50 - reliability))
@@ -254,7 +274,7 @@
 				return
 			shutdown = 1
 			return
-		else if(!can_use_charge(200))
+		else if(!can_use_charge(100))
 			src.speak("<span class='danger'>Insufficient power to activate!</span>")
 			shutdown = 1
 		else
@@ -262,23 +282,25 @@
 			shutdown = 0
 
 /obj/item/weapon/gun/energy/advanced/proc/record()
+	if(shutdown != 0) return
 	if(recording == 2 || intelligun_status & INTELLIGUN_BACKUP_POWER)
 		src.speak("<span class='warning'>Recording is disabled!</span>")
 		return
 	if(timerecorded >= 15)
 		src.speak("<span class='notice'>Unable to record more data: Memory slot is at it's maximum capacity!</span>")
 		return
-	if(shutdown) return
+	if(shutdown != 0) return
 	src.speak("<span class='notice'> Recording [recording ? "stopped" : "started"]</span>")
 	if(recording) recording = 0
 	else recording = 1
 
 /obj/item/weapon/gun/energy/advanced/proc/play()
+	if(shutdown != 0) return
 	if(held_pai)
 		if(!(intelligun_status & INTELLIGUN_AI_ENABLED))
 			src.speak("<span class='warning'>Unable to play recording: AI disabled!</span>")
 			return
-	if(shutdown) return
+	if(shutdown != 0) return
 	if(intelligun_status & INTELLIGUN_PLAYING)
 		src.speak("You are already playing!")
 		return
@@ -302,7 +324,7 @@
 			i++
 
 /obj/item/weapon/gun/energy/advanced/proc/flashlight()
-	if(shutdown) return
+	if(shutdown != 0) return
 	if(intelligun_status & INTELLIGUN_BACKUP_POWER && !(intelligun_status & INTELLIGUN_FLASHLIGHT))
 		src.speak("<span class='warning'>This feature is disabled due to power loss!</span>")
 		return
@@ -323,15 +345,16 @@
 
 
 /obj/item/weapon/gun/energy/advanced/proc/backup()
-	if(shutdown) return
+	if(shutdown != 0) return
 	var/area/A = get_area(src)
 	var/location = A.name
 	if(prob(102 - reliability))
 		location = pick("Candy Land", "Space", "%ʤzrt", "A smelly pile of garbage")
-	src.speak("<span class='warning'>This is [owner ? "[owner.name]" : "[ai_name]"] requesting backup at the location of: [location] immediatley.</span>", 1)
-	radio.autosay("This is [owner ? "[owner.name]" : "[ai_name]"] requesting backup at the location of: [location] immediately.", ai_name, "Security")
+	src.speak("<span class='warning'>This is [owner ? "[owner]" : "[ai_name]"] requesting backup at the location of: [location] immediatley.</span>", 1)
+	radio.autosay("This is [owner ? "[owner]" : "[ai_name]"] requesting backup at the location of: [location] immediately.", ai_name, "Security")
 
 /obj/item/weapon/gun/energy/advanced/proc/shutup()
+	if(shutdown != 0) return
 	if(prob(105 - reliability))
 		src.speak("You can never silence me!")
 		return
@@ -340,11 +363,13 @@
 	intelligun_status &= ~INTELLIGUN_SPEECH
 
 /obj/item/weapon/gun/energy/advanced/proc/unshutup() //speak was taken..
+	if(shutdown != 0) return
 	if(intelligun_status & INTELLIGUN_SPEECH) return
 	intelligun_status |= INTELLIGUN_SPEECH
 	src.speak(pick("Hah! Knew you'd miss me", "Aww...I'm flattered", "I was only being quiet because I was angry. But I forgive you."), 1)
 
 /obj/item/weapon/gun/energy/advanced/proc/override_safety()
+	if(shutdown != 0) return
 	if(override_safety == 1)
 		override_safety = 0
 		src.speak("<span class='warning'><b>Safety protocols temporarily disengaged. Approximately ten shots before safety re-engages.</b></span>")
@@ -360,7 +385,7 @@
 
 /obj/item/weapon/gun/energy/advanced/proc/supercharge()
 
-
+	if(shutdown != 0) return
 	if(!src.intelligun_status & INTELLIGUN_EMAGGED)
 		return
 	if(src.intelligun_status & INTELLIGUN_SUPERCHARGED)
@@ -377,6 +402,7 @@
 				src.cause_explosion(rand(1, 2))
 
 /obj/item/weapon/gun/energy/advanced/proc/commands()
+	if(shutdown != 0) return
 	src.speak("Listing commands:	<br>\
 			  <font color=#808000>Activate: </font>\
 			  Activate power <br>\

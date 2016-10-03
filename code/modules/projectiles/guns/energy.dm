@@ -89,7 +89,7 @@
 
 /obj/item/weapon/gun/energy/update_icon()
 	..()
-	if(charge_meter)
+	if(charge_meter && power_supply)
 		var/ratio = power_supply.charge / power_supply.maxcharge
 
 		//make sure that rounding down will not give us the empty state even if we have charge for a shot left.

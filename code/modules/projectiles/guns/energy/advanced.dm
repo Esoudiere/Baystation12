@@ -46,28 +46,30 @@
 	var/list/insults = list("Your mumma's so clowney, her shoes squeek when she walks!","Don't forget; I'm here to sever!", "Keep calm and just die already.")
 	var/list/insults2 = list("Hey, hey, what are your shoes made of? Your mums chest hair?", "I'm very proud of you..Not!", "Initiate sarcastic clap sequence", "Cool story bro!"),
 	var/list/joke = list("Why didn't the security bot drop his stunstick? Because NanoTrasen cares about safety and glued it on!", "What did the security officer say to thief? Nothing, because prisoners don't get visitation rights!", "A security guard walked into a bar, then realised that it wasn't his break time and left.")
-	var/list/joke2 = list("I'm smarter than the average gun!", "Got problems? Please sign a resignation form!", "First rule of gun club: Don't speak about gun club.")
+	var/list/joke2 = list("I'm smarter than the average gun!", "Got problems? Please sign a resignation form!", "First rule of gun club: Don't speak about gun club.", "Ayy ellmayo")
 	var/list/dontshoot = list("Protect the innocent!", "Have you seen a criminal anywhere?", "Move along, citizen!", "Security coming through!", "Just doing my job!", "Get outta the way!", "Please report all criminal activity to the nearest officer!", "If you can't do the time, don't do the crime.", "Incoming!", "Sunshine lollypops and, rainbows")
-	var/list/non_human = list("We should be fighting criminals!", "Eugh, a waste of charge", "Why are you shooting that?", "Grr, you're <I>so</I> boring", "Ey boss, why so glum?")
+	var/list/non_human = list("We should be fighting criminals!", "Eugh, a waste of charge", "Why are you shooting that?", "Grr, you're <I>so</I> boring", "Ey boss, why so glum?", "HONK HONK!")
 	var/list/shoot = list("Freeze, scumbag!", "Do not resist!", "Resistance is futile!", "For NanoTrasen!", "You are the filth of society!", "Pew Pew!", "Halt! Security!", "Bam!", "All your base are belong to us!", "Stop being stupid!", "What's that smell?", "You're going away for a loooong time!", "Shutup and be civilised!", "Everybody on the ground!")
 	var/list/speech_verbs = list("beeps", "boops", "pings", "articulates", "chimes", "drones", "informs", "enunciates", "states", "conveys", "implores")
+	var/list/idle_speech = list("Idle hands are the devil's play things", "Urgh, when are we going to do something!", "Come on, hurry up!", "Excuse me while I sit here doing NOTHING!", "Ay Ay Ay")
 
-	var/list/commands = list("Shutdown", "Arrest", "Backup", "Record", "Analyze", "Activate", "Commands", "Lock", "Shutup", "Speak", "Play", "Change Access Requirements", "Override", "Flashlight", "Toggle AI")
+	var/list/commands = list("Shutdown", "Arrest", "Backup", "Record", "Analyze", "Activate", "Commands", "Lock", "Shutup", "Speak", "Play", "Override", "Flashlight", "Toggle AI", "Medic")
 
 /obj/item/weapon/gun/energy/advanced/New()
 	..()
 	ai_name = pick("Wheatley", "HAL", "Law", "Order", "Peace", "Prisoner", "Clobborer", "Civil", "Governor", "Diligence", "Temper", "Steel", "No9", "Guardian", "Captain")
-	radio = new /obj/item/device/radio{channels=list("Security")}(src)
+	radio = new /obj/item/device/radio{channels=list("Security", "Medical")}(src)
 	processing_objects.Add(src)
 	ai = new /obj/item/device/paicard
-	spawn(5)
-		update_icon()
-		primary_power = power_supply
-		intelligun_status |= INTELLIGUN_SPEECH
-		intelligun_status |= INTELLIGUN_AI_ENABLED
+	update_icon()
+	primary_power = power_supply
+	intelligun_status |= INTELLIGUN_SPEECH
+	intelligun_status |= INTELLIGUN_AI_ENABLED
+	listening_objects += src
 
 /obj/item/weapon/gun/energy/advanced/Destroy()
 	qdel(radio)
+	listening_objects -= src
 	if(primary_power)
 		qdel(power_supply)
 	if(backup_power)
@@ -80,12 +82,12 @@
 	..()
 
 /obj/item/weapon/gun/energy/advanced/update_icon()
+	..()
+	var/I = icon_state
 	if(!power_supply)
-		icon_state = "[initial(icon_state)]0-nobat"
-	else
-		..()
+		I += "-nobat"
 	if(!ai)
-		icon_state = "[icon_state]-noai"
+		I += "-noai"
 
 
 /obj/item/weapon/gun/energy/advanced/process()
@@ -111,6 +113,8 @@
 					poweruse += 3
 			use_tick = 0
 			update_icon()
+			if(prob(1))
+				src.speak(pick(idle_speech))
 			if(intelligun_status & INTELLIGUN_BACKUP_POWER)
 				if(power_supply.percent() < 50 && power_supply.charge && intelligun_status & INTELLIGUN_AI_ENABLED)
 					disable_auto_ai()
@@ -118,7 +122,7 @@
 					src.speak("<span class='notice'>Switching to primary power..</span>")
 					intelligun_status &= ~INTELLIGUN_BACKUP_POWER
 					power_supply = primary_power
-			if(!can_use_charge(poweruse * 10))
+			if(!can_use_charge(poweruse))
 				src.speak("<span class='danger'>Shutting down due to power loss...</span>", 0, 1)
 				shutdown_weapon()
 				if(power_supply != primary_power)
@@ -157,7 +161,6 @@
 				cause_explosion(1)
 
 /obj/item/weapon/gun/energy/advanced/proc/cause_explosion(var/explosive = 0) // Basically, this blasts into a billion tiny, unrecoverable pieces.
-	src.loc = get_turf(src)
 	spark()
 	var/shards = 2
 	if(held_pai)
@@ -230,7 +233,7 @@
 		if(do_after(user, 100))
 			installed = W
 			user.drop_item()
-			W.loc = src
+			W.forceMove(src)
 			playsound(src.loc, 'sound/items/Screwdriver.ogg', 25, -3)
 			B.bcell = src.primary_power
 			user.visible_message("<span class='notice'>\The [user] installs \the [W] into \the [src]!</span>", "<span class='notice'>You install \the [W] into \the [src]!</span>")
@@ -287,9 +290,9 @@
 		if(backup_power && primary_power)
 			user << "<span class='notice'>[src] already has a power supply!</span>"
 			return
-		user.visible_message("<span class='notice'>[user] inserts the [W] into [src].</span>", "<span clss='notice'>You insert the [W] into [src]</span>")
+		user.visible_message("<span class='notice'>[user] inserts the [W] into [src].</span>", "<span class='notice'>You insert the [W] into [src]</span>")
 		user.drop_item()
-		W.loc = src
+		W.forceMove(src)
 		if(!primary_power)
 			primary_power = W
 			power_supply = primary_power
@@ -315,7 +318,7 @@
 			return
 		user.visible_message("<span class='notice'>[user] inserts the [card] into [src].</span>", "<span class='notice'>You insert the [card] into [src]</span>")
 		user.drop_item()
-		card.loc = src
+		card.forceMove(src)
 		ai = card
 	if(istype(W, /obj/item/weapon/wirecutters))
 		if(intelligun_status & INTELLIGUN_LOCKED)
@@ -365,7 +368,7 @@
 			if(owner)
 				if(I.registered_name == owner)
 					authorise()
-			else if(src.req_access in I.access)
+			else if(src.allowed(user))
 				owner = I.registered_name
 				user << "<span class='notice'>You link your identification card to the weapons systems!</span>"
 			else
@@ -422,22 +425,10 @@
 	return new projectile_type(src)
 
 /obj/item/weapon/gun/energy/advanced/Topic(href, href_list)
-	if(usr.stat || usr.restrained()) return
+	if(..())
+		return 1
 	if(href_list["medical"])
 		screen = "medical"
-	if (href_list["access"])
-		var/acc = href_list["access"]
-		if (acc == "all")
-			req_access = null
-		else
-			var/req = text2num(acc)
-			if(req_access == null)
-				req_access = list()
-			if(!(req in req_access))
-				req_access += req
-			else
-				req_access -= req
-		access_window(usr)
 	if(href_list["unlock"])
 		var/obj/item/weapon/card/id/I = usr.get_active_hand()
 		if (istype(I, /obj/item/weapon/card/id))
@@ -472,8 +463,8 @@
 				unshutup()
 			if("Play")
 				play()
-			if("Change Access Requirements")
-				access_window(usr, null)
+			if("Medic")
+				call_medic()
 			if("Flashlight")
 				flashlight()
 			if("Override")
@@ -487,7 +478,7 @@
 			if("Toggle AI")
 				if(held_pai && held_pai.pai == usr)
 					usr << "<span class='warning'>There is a firewall blocking you from doing that!</span>"
-				else if(owner && usr.name != owner.name)
+				else if(owner && usr.name != owner)
 					usr << "<span class='warning'>You do not have the access to do that!</span>"
 				else
 					disable_auto_ai()
@@ -498,18 +489,16 @@
 				if(installed)
 					installed.name = ai_name
 
-	src.add_fingerprint(usr)
-	nanomanager.update_uis(src)
+	return 1
 
 /obj/item/weapon/gun/energy/advanced/afterattack(atom/A, mob/living/user, adjacent, params)
+	if(Adjacent(A))
+		return
 	if(shutdown || prob(100 - reliability))
 		handle_click_empty()
 		return
 	if(prob(1) && reliability)
 		reliability -= rand(1, 5)
-	if(!ai)
-		..()
-		return
 	if(prob(60 - reliability) && power_supply && power_supply.percent() >= 50)
 		src.speak("<span class='danger'>Warning! Battery overloaded!</span>")
 		power_supply.maxcharge = rand(power_supply.maxcharge/4, power_supply.maxcharge/2)
@@ -520,11 +509,11 @@
 		A = usr
 	if(istype(A, /mob/living/carbon/human))
 		if(target_status(A, user))
-				..()
+			return ..()
 	else
 		if(prob(20))
 			src.speak("[pick(non_human)]", 1)
-		..()
+		return ..()
 //No adjacent fire.
 /obj/item/weapon/gun/energy/advanced/attack(atom/A, mob/living/user, def_zone)
 	if(installed)
@@ -590,7 +579,7 @@
 		if(!(intelligun_status & INTELLIGUN_SPEECH)) return
 		if(intelligun_status & INTELLIGUN_BACKUP_POWER)
 			message = RadioChat(message, 90, (1.5 - power_supply.percent())) // Distort the message, but don't use power.
-		else if(!can_use_charge(25)) return
+		else if(!can_use_charge(5)) return
 		if(prob(80 - reliability))
 			spark()
 			if(prob(50))
@@ -599,7 +588,7 @@
 				message = Intoxicated(message)
 	if(held_pai)
 		if(!unclear)
-			held_pai.pai << "<font color=#FF0000>[rand(1,8)][rand(1,8)][rand(1,9)][rand(1,9)][pick("A","C","F","Z","X")]#System Message -</font><span class='notice'>  [RadioChat(strip_html_properly(message), 75, 1.5)]</span>"
+			held_pai.pai << "<font color=#FF0000>[rand(1,8)][rand(1,8)][rand(1,9)][rand(1,9)][pick("A","C","F","Z","X")]#System Message -</font><span class='notice'>  [RadioChat(null, strip_html_properly(message), 75, 1.5)]</span>"
 	if(!ai || !(intelligun_status & INTELLIGUN_AI_ENABLED)) return
 	var/turf/T = get_turf(src)
 	T.visible_message("<span class='game say'>\icon[src.icon]</span><span class='name'>[ai_name]</span> [pick(speech_verbs)], \"<span class='notice'>[message]</span>\"")
@@ -610,24 +599,27 @@
 	var/list/possibilities = list()
 	var/turf/T = get_turf(src)
 	if(intelligun_status & INTELLIGUN_AI_ENABLED && message)
-		for(var/mob/living/carbon/human/H in view(7, T)) // Search for full names.
-			humans += H
-			if(findtext(message, lowertext(H.name)))
-				if(!istype(H)) return
-				possibilities += H
-		var/chosen_name = ""
-		for(var/mob/living/carbon/human/H in humans) // Search for partial names
-			var/list/name = string_explode(lowertext(H.name), " ")
-			for(var/i = 1, i < name.len, i++)
-				if(findtext(lowertext(message), name[i]))
-					chosen_name = name[i]
-					break
-			if(chosen_name) break
-		for(var/mob/living/carbon/human/H in humans) //Tie the partial name to a mob
-			if(chosen_name)
-				if(findtext(H.name, chosen_name))
-					if(H in possibilities) continue
+		if(findtext(message, "me"))
+			possibilities += user
+		else
+			for(var/mob/living/carbon/human/H in view(7, T)) // Search for full names.
+				humans += H
+				if(findtext(message, lowertext(H.name)))
+					if(!istype(H)) return
 					possibilities += H
+			var/chosen_name = ""
+			for(var/mob/living/carbon/human/H in humans) // Search for partial names
+				var/list/name = string_explode(lowertext(H.name), " ")
+				for(var/i = 1, i < name.len, i++)
+					if(findtext(lowertext(message), name[i]))
+						chosen_name = name[i]
+						break
+				if(chosen_name) break
+			for(var/mob/living/carbon/human/H in humans) //Tie the partial name to a mob
+				if(chosen_name)
+					if(findtext(H.name, chosen_name))
+						if(H in possibilities) continue
+						possibilities += H
 		if(possibilities.len == 1)
 			target = possibilities[1]
 		else if(possibilities.len > 1)
@@ -637,7 +629,7 @@
 /obj/item/weapon/gun/energy/advanced/hear_talk(var/mob/M, message, var/verb="says", datum/language/speaking=null)
 	if(intelligun_status & INTELLIGUN_BACKUP_POWER)
 		return
-	if(can_use_charge(3))
+	if(can_use_charge(1))
 		if(recording) // Recorder code with a few features removed.
 			if(!intelligun_status & INTELLIGUN_AI_ENABLED)
 				recording = 0
@@ -656,11 +648,16 @@
 				recorded_data += "[M.name] [speaking.format_message_plain(message, verb)]"
 			else
 				recorded_data += "[M.name] [verb], \"[message]\""
-
+		if(findtext(message, "honk") || findtext(message, "clown"))
+			var/list/jokes = joke.Copy()
+			jokes += joke2.Copy()
+			jokes += insults.Copy()
+			jokes += insults2.Copy()
+			src.speak(pick(jokes))
 		if(findtext(message, ai_name))
 			message = lowertext(message)
 			if(owner && intelligun_status & INTELLIGUN_LOCKED)
-				if(M.name != owner.name)
+				if(M.name != owner)
 					src.speak("<span class='warning'>Access Denied!</span>")
 					return
 			if(prob(100 - reliability))
@@ -699,6 +696,8 @@
 				flashlight()
 			if(findtext(message, "supercharge"))
 				supercharge()
+			if(findtext(message, "medic"))
+				call_medic(M)
 			if(findtext(message, "explode"))
 				cause_explosion(rand(2, 10))
 

@@ -14,7 +14,7 @@
 /obj/item/weapon/gun/energy/advanced/proc/insert_pai(var/obj/item/device/paicard/card)
 	if(held_pai) return
 	if(card.pai)
-		card.loc = src
+		card.forceMove(src)
 		held_pai = card
 		card.pai << "You've been inserted into \the [src]"
 		card.pai << "Uploading control software..."
@@ -51,6 +51,7 @@
 
 /obj/item/weapon/gun/energy/advanced/ui_interact(mob/user, ui_key = "main", var/datum/nanoui/ui = null, var/force_open = 1, var/datum/nano_ui/master_ui = null, var/datum/topic_state/state = default_state)
 	var/list/data = list()
+	data["shutdown"] = (shutdown == 0 ? 0 : 1)
 	data["can_open"] = 1
 	if(intelligun_status & INTELLIGUN_LOCKED)
 		if(!(held_pai && user == held_pai.pai))
@@ -59,7 +60,7 @@
 	data["speech"] = (intelligun_status & INTELLIGUN_SPEECH ? "Enabled!" : "Disabled!")
 	data["integrity"] = reliability
 	if(owner)
-		data["owner"] = owner.name
+		data["owner"] = owner
 	else
 		data["owner"] = "NONE"
 	data["ai_name"] = ai_name
@@ -67,7 +68,7 @@
 	data["poweruse"] = poweruse
 	if(power_supply)
 		data["powerleft"] = power_supply.charge
-		data["powertime"] = round((power_supply.charge / poweruse) / 60)
+		data["powertime"] = round(power_supply.charge / poweruse) * 10
 	else
 		data["powerleft"] = 0
 		data["powertime"] = "NONE"
@@ -77,7 +78,6 @@
 	data["commands"] = commands
 	data["locked"] = (intelligun_status & INTELLIGUN_LOCKED ? "Enabled!" : "Disabled!")
 	data["powerstate"] = 0
-	data["ai_status"] = pick(joke, joke2, insults, insults2)
 	if(intelligun_status & INTELLIGUN_BACKUP_POWER)
 		data["powerstate"] = 4
 	else if(intelligun_status & INTELLIGUN_LOWPOWER)
@@ -123,30 +123,6 @@
 		gun.intelligun_status &= ~INTELLIGUN_AI_ENABLED
 	usr.verbs -= /obj/item/weapon/gun/energy/advanced/proc/shutdown_auto_ai
 
-
-/obj/item/weapon/gun/energy/advanced/proc/access_window(var/mob/user as mob, var/obj/item/weapon/card/id/P)
-	if(istype(user, /mob/living/carbon/human))
-		var/mob/living/carbon/human/H = user
-		var/obj/item/weapon/card/id/I = H.get_idcard()
-		if(P) I = P
-		if(I)
-			if(access_hop in I.access)
-				var/t1 = ""
-				var/list/accesses = get_all_accesses()
-				for(var/acc in accesses)
-					var/aname = get_access_desc(acc)
-					if (!req_access || req_access.len || !(acc in req_access))
-						t1 += "<a href='?src=\ref[src];access=[acc]'>[aname]</a><br>"
-					else
-						t1 += "<a style='color: red' href='?src=\ref[src];access=[acc]'>[aname]</a><br>"
-				t1 += text("<p><a href='?src=\ref[];close=1'>Close</a></p>\n", src)
-				user << browse(t1, "window=airlock_electronics")
-				onclose(user, "airlock")
-			else
-				H << "<span class='warning'>You do not have the access to change that!</span>"
-		else
-			H << "<span class='warning'>You require your ID	to do that!</span>"
-
 /obj/item/weapon/gun/energy/advanced/proc/authorise()
 	set name = "Authorise Interface"
 	set desc ="Allow access to the interface when it's locked."
@@ -187,7 +163,7 @@
 	if(src.intelligun_status & INTELLIGUN_LOCKED)
 		usr << "[src] is locked shut!"
 		return
-	src.held_pai.loc = get_turf(src)
+	src.held_pai.forceMove(get_turf(src))
 	if(istype(usr, /mob/living/carbon/human))
 		usr.put_in_hands(src.held_pai)
 	else
