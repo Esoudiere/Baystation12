@@ -82,13 +82,45 @@
 	..()
 
 /obj/item/weapon/gun/energy/advanced/update_icon()
+	icon_state = initial(icon_state)
 	..()
-	var/I = icon_state
 	if(!power_supply)
-		I += "-nobat"
+		icon_state = "advsec0-nobat"
 	if(!ai)
-		I += "-noai"
+		icon_state += "-noai"
 
+/obj/item/weapon/gun/energy/advanced/proc/update_power()
+	if(primary_power)
+		power_supply = primary_power
+	else if(backup_power)
+		power_supply = backup_power
+	else
+		power_supply = null
+		shutdown_weapon()
+		return
+	if(intelligun_status & INTELLIGUN_BACKUP_POWER)
+		if(power_supply.percent() < 50 && power_supply.charge && intelligun_status & INTELLIGUN_AI_ENABLED)
+			disable_auto_ai()
+		if(primary_power && primary_power.percent() >= 10)
+			src.speak("<span class='notice'>Switching to primary power..</span>")
+			intelligun_status &= ~INTELLIGUN_BACKUP_POWER
+			power_supply = primary_power
+	if(installed)
+		installed.bcell = power_supply
+
+/obj/item/weapon/gun/energy/advanced/proc/check_power()
+	if(!power_supply) return
+	if(power_supply.percent() <= 20)
+		sleep(0)
+		if(!(intelligun_status & INTELLIGUN_LOWPOWER))
+			intelligun_status |= INTELLIGUN_LOWPOWER
+			src.speak("<span class='danger'>Low battery!</span>")
+			if(!(intelligun_status & INTELLIGUN_FLASHLIGHT)) // Flash briefly.
+				set_light(3)
+				spawn(10)
+					set_light(0)
+	else if(power_supply.percent() > 20 && intelligun_status & INTELLIGUN_LOWPOWER)
+		intelligun_status &= ~INTELLIGUN_LOWPOWER
 
 /obj/item/weapon/gun/energy/advanced/process()
 	if(shutdown) return
@@ -115,13 +147,7 @@
 			update_icon()
 			if(prob(1))
 				src.speak(pick(idle_speech))
-			if(intelligun_status & INTELLIGUN_BACKUP_POWER)
-				if(power_supply.percent() < 50 && power_supply.charge && intelligun_status & INTELLIGUN_AI_ENABLED)
-					disable_auto_ai()
-				if(primary_power && primary_power.percent() >= 10)
-					src.speak("<span class='notice'>Switching to primary power..</span>")
-					intelligun_status &= ~INTELLIGUN_BACKUP_POWER
-					power_supply = primary_power
+			update_power()
 			if(!can_use_charge(poweruse))
 				src.speak("<span class='danger'>Shutting down due to power loss...</span>", 0, 1)
 				shutdown_weapon()
@@ -132,17 +158,7 @@
 				if(intelligun_status & INTELLIGUN_FLASHLIGHT)
 					flashlight()
 				return 0
-
-			if(power_supply.percent() <= 20)
-				if(!(intelligun_status & INTELLIGUN_LOWPOWER))
-					src.speak("<span class='danger'>Low battery!</span>")
-					intelligun_status |= INTELLIGUN_LOWPOWER
-					if(!(intelligun_status & INTELLIGUN_FLASHLIGHT)) // Flash briefly.
-						set_light(3)
-						spawn(10)
-							set_light(0)
-			else if(power_supply.percent() >= 20 && intelligun_status & INTELLIGUN_LOWPOWER)
-				intelligun_status &= INTELLIGUN_LOWPOWER
+			check_power()
 	return 1
 
 /obj/item/weapon/gun/energy/advanced/emp_act(severity)
@@ -206,6 +222,9 @@
 		explosion(T,0,0,min(rand(1, explosive*2), 7))
 
 /obj/item/weapon/gun/energy/advanced/proc/can_use_charge(var/amount = 0)
+	if(!power_supply)
+		if(primary_power) power_supply = primary_power
+		else if(backup_power) power_supply = backup_power
 	if(power_supply)
 		if(!power_supply.checked_use(amount))
 			if((!backup_power || !backup_power.charge) || intelligun_status & INTELLIGUN_BACKUP_POWER)
@@ -213,14 +232,14 @@
 				return 0
 			else
 				power_supply = backup_power
-				spawn(1)
-					src.speak("<span class='danger'>Power supply switched to backup power! Disabling non-vital functions..</span>")
-					intelligun_status |= INTELLIGUN_BACKUP_POWER
-					if(intelligun_status & INTELLIGUN_FLASHLIGHT)
-						flashlight()
+				src.speak("<span class='danger'>Power supply switched to backup power! Disabling non-vital functions..</span>")
+				intelligun_status |= INTELLIGUN_BACKUP_POWER
+				if(intelligun_status & INTELLIGUN_FLASHLIGHT)
+					flashlight()
 				return can_use_charge(amount)
 	else
 		return 0
+	check_power()
 	return 1
 
 /obj/item/weapon/gun/energy/advanced/attackby(obj/item/weapon/W as obj, mob/user as mob)
@@ -266,16 +285,16 @@
 						user.put_in_hands(backup_power)
 						backup_power.add_fingerprint(user)
 						backup_power.update_icon()
-						src.backup_power = null
+						backup_power = null
+						update_power()
 						user.visible_message("<span class='notice'>[user] removes the power cell from [src].</span>", "<span class='notice'>You remove the power cell from [src].</span>")
 						return
 				spark()
-				user.put_in_hands(power_supply)
-				power_supply.add_fingerprint(user)
-				power_supply.update_icon()
-				src.power_supply = null
-				if(installed)
-					installed.bcell = null
+				user.put_in_hands(primary_power)
+				primary_power.add_fingerprint(user)
+				primary_power.update_icon()
+				primary_power = null
+				update_power()
 				user.visible_message("<span class='notice'>[user] removes the power cell from [src].</span>", "<span class='notice'>You remove the power cell from [src].</span>")
 			if("AI")
 				user.put_in_hands(ai)
@@ -296,10 +315,10 @@
 		if(!primary_power)
 			primary_power = W
 			power_supply = primary_power
-			if(installed)
-				installed.bcell = primary_power
-		else
+		else if(!backup_power)
 			backup_power = W
+		update_power()
+		update_icon()
 	if(istype(W, /obj/item/device/paicard))
 		if(intelligun_status & INTELLIGUN_LOCKED)
 			user << "<span class='warning'>You cannot access the AI because the maintenance hatch is locked!</span>"
@@ -363,16 +382,23 @@
 			if(held_pai)
 				held_pai.pai.verbs += /obj/item/weapon/gun/energy/advanced/proc/supercharge
 	if(istype(W, /obj/item/weapon/card/id))
-		var/obj/item/weapon/card/id/I = usr.get_active_hand()
-		if(istype(I, /obj/item/weapon/card/id))
-			if(owner)
-				if(I.registered_name == owner)
-					authorise()
-			else if(src.allowed(user))
-				owner = I.registered_name
-				user << "<span class='notice'>You link your identification card to the weapons systems!</span>"
+		var/obj/item/weapon/card/id/I = W
+		if(owner)
+			if(I.registered_name == owner)
+				if(shutdown == 0)
+					if(intelligun_status & INTELLIGUN_AUTHORISED)
+						intelligun_status &= ~INTELLIGUN_AUTHORISED
+					else intelligun_status |= INTELLIGUN_AUTHORISED
+					speak("Interface [intelligun_status & INTELLIGUN_AUTHORISED ? "un" : ""]locked")
+				else
+					activate_weapon()
 			else
 				user << "<span class='warning'>You do not have the access to do that!</span>"
+		else if(src.allowed(user))
+			owner = I.registered_name
+			user << "<span class='notice'>You link your identification card to the weapons systems!</span>"
+		else
+			user << "<span class='warning'>You do not have the access to do that!</span>"
 	update_icon()
 	return
 
@@ -521,7 +547,7 @@
 	return
 
 
-/obj/item/weapon/gun/energy/advanced/proc/check_power()
+/obj/item/weapon/gun/energy/advanced/proc/power_percent()
 	return power_supply.percent()
 
 /obj/item/weapon/gun/energy/advanced/proc/target_status(var/mob/living/carbon/human/H, var/mob/living/user)
@@ -574,11 +600,11 @@
 	return 0
 
 /obj/item/weapon/gun/energy/advanced/proc/speak(var/message, var/unclear = 0, var/force = 0)
-	if(!force)
+	if(!force || !power_supply)
 		if(shutdown) return
 		if(!(intelligun_status & INTELLIGUN_SPEECH)) return
 		if(intelligun_status & INTELLIGUN_BACKUP_POWER)
-			message = RadioChat(message, 90, (1.5 - power_supply.percent())) // Distort the message, but don't use power.
+			message = RadioChat(null, message, 90, (1.5 - power_supply.percent())) // Distort the message, but don't use power.
 		else if(!can_use_charge(5)) return
 		if(prob(80 - reliability))
 			spark()
@@ -627,7 +653,7 @@
 		return target
 
 /obj/item/weapon/gun/energy/advanced/hear_talk(var/mob/M, message, var/verb="says", datum/language/speaking=null)
-	if(intelligun_status & INTELLIGUN_BACKUP_POWER)
+	if(shutdown != 0 || intelligun_status & INTELLIGUN_BACKUP_POWER)
 		return
 	if(can_use_charge(1))
 		if(recording) // Recorder code with a few features removed.
@@ -661,7 +687,7 @@
 					src.speak("<span class='warning'>Access Denied!</span>")
 					return
 			if(prob(100 - reliability))
-				src.speak("<span class='warning'>[pick("Invalid p&rame#er val¤e: \"[RadioChat(M.name, 100, 2)]\"", "%^^$ ER%RR CODE 404: Command does n$t exist", "We've dug too deep!")]</span>")
+				src.speak("<span class='warning'>[pick("Invalid p&rame#er val¤e: \"[RadioChat(null, M.name, 100, 2)]\"", "%^^$ ER%RR CODE 404: Command does n$t exist", "We've dug too deep!")]</span>")
 				return
 			if(findtext(message, "activate"))
 				activate_weapon()
@@ -677,7 +703,7 @@
 			if(findtext(message, "commands"))
 				commands()
 			if(findtext(message, "health"))
-				health()
+				health(M)
 			if(findtext(message, "lock"))
 				lock_weapon()
 			if(findtext(message, "override"))

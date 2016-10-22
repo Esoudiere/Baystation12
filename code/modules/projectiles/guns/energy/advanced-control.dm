@@ -53,10 +53,9 @@
 	var/list/data = list()
 	data["shutdown"] = (shutdown == 0 ? 0 : 1)
 	data["can_open"] = 1
-	if(intelligun_status & INTELLIGUN_LOCKED)
+	if(!(intelligun_status & INTELLIGUN_AUTHORISED))
 		if(!(held_pai && user == held_pai.pai))
-			if(!(intelligun_status & INTELLIGUN_AUTHORISED))
-				data["can_open"] = 0
+			data["can_open"] = 0
 	data["speech"] = (intelligun_status & INTELLIGUN_SPEECH ? "Enabled!" : "Disabled!")
 	data["integrity"] = reliability
 	if(owner)
@@ -68,10 +67,10 @@
 	data["poweruse"] = poweruse
 	if(power_supply)
 		data["powerleft"] = power_supply.charge
-		data["powertime"] = round(power_supply.charge / poweruse) * 10
+		data["powertime"] = round(((power_supply.charge / poweruse) * 10) / 60)
 	else
 		data["powerleft"] = 0
-		data["powertime"] = "NONE"
+		data["powertime"] = "0"
 	data["recorded_data"] = recorded_data
 	data["state"] = screen
 	data["ai_enabled"] = (intelligun_status & INTELLIGUN_AI_ENABLED ? "Enabled!" : "Disabled!")
@@ -82,7 +81,7 @@
 		data["powerstate"] = 4
 	else if(intelligun_status & INTELLIGUN_LOWPOWER)
 		data["powerstate"] = 3
-	else if(power_supply.percent() <= 50)
+	else if(!power_supply || power_supply.percent() <= 50)
 		data["powerstate"] = 2
 	else if(!backup_power)
 		data["powerstate"] = 1
@@ -130,7 +129,7 @@
 
 	var/turf/T = get_turf(src)
 	var/obj/item/weapon/gun/energy/advanced/gun
-	for(var/obj/item/weapon/gun/energy/advanced/A in T.loc)
+	for(var/obj/item/weapon/gun/energy/advanced/A in T)
 		if(A.held_pai.pai == usr) gun = A
 	if(!gun) return
 	if(gun.intelligun_status & INTELLIGUN_AUTHORISED)

@@ -25,9 +25,9 @@ $('body').css("background-repeat","repeat-x");
 			</div>
 		{{/for}}
 		<H1><b>Information:</b></H1>
-		<b>Power status:</b>
+		<div class='itemLabel'><b>Power status:</b></div>
 		{{if data.powerstate == 0}}
-			<div class='toxin'><b>Nominal</b></div>
+			<div class='itemContent'><div class='toxin'><b>Nominal</b></div></div>
 			<div class='itemLabel'><b>Power Use:</b></div>
 			<div class='itemContent'>{{:data.poweruse}}w/sec</div><br>
 			<div class='itemLabelNarrow'><b>Charge:</b></div>

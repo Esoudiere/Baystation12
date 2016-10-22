@@ -536,6 +536,13 @@ other types of metals and chemistry for reagents).
 	build_path = /obj/item/weapon/gun/energy/decloner
 	sort_string = "TAAAE"
 
+/datum/design/item/weapon/intelligun
+	id = "intelligun"
+	req_tech = list(TECH_COMBAT = 2, TECH_MATERIAL = 2, TECH_BIO = 2, TECH_POWER = 3, TECH_DATA = 3)
+	materials = list(DEFAULT_WALL_MATERIAL = 3000, "glass" = 1000, "gold" = 500)
+	build_path = /obj/item/weapon/gun/energy/advanced
+	sort_string = "TAAAF"
+
 /datum/design/item/weapon/smg
 	id = "smg"
 	req_tech = list(TECH_COMBAT = 4, TECH_MATERIAL = 3)

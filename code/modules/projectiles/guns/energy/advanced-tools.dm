@@ -190,7 +190,7 @@
 		src.speak("<span class='warning'>[target], you are officially under arrest! You are required to lay face-down on the floor within \
 				   the next ten seconds or use of force may be authorised! Failure to do as requested by \
 				   [owner ? "[owner]" : "your arresting officer"] will result in further charges against you!</span>")
-		spawn(50)
+		spawn(20)
 			if(!target.stat || !target.lying || !target.restrained())
 				src.speak("<span class='danger'>[target], you have five seconds to submit!</span>")
 				spawn(50)
@@ -427,6 +427,9 @@
 			  Locks the interface so as to require \
 			  identification to open and disables \
 			  voice commands. <br> \
+			  <font color=#00FF00>Analyze: </font>\
+			  Calls for medical assistance via the \
+			  encrypted medical channel. <br> \
 			  <font color=#808000>Play: </font> \
 			  Plays the stored voice records. <br> \
 			  <font color=#808000>Record: </font> \
@@ -440,4 +443,4 @@
 			  Enables voice response.<br> \
 			  <font color=#FF0000>Unlock: </font> \
 			  Unlocks the interface and enables voice commands \
-			  commands. [intelligun_status & INTELLIGUN_EMAGGED ? "<br><font color=#800080>Supercharge : Ov&$r-rchargÆ r-rèactor<br>Explode: -BZZT-</font>" : ""]", 1)
+			  [intelligun_status & INTELLIGUN_EMAGGED ? "<br><font color=#800080>Supercharge : Ov&$r-rchargÆ r-rèactor<br>Explode: -BZZT-</font>" : ""]", 1)
