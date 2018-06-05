@@ -53,7 +53,7 @@ obj/machinery/embedded_controller/radio/Destroy()
 	//var/radio_power_use = 50 //power used to xmit signals
 
 	var/frequency = 1379
-	var/radio_filter = null
+	var/radio_filt = null
 	var/datum/radio_frequency/radio_connection
 	unacidable = 1
 
@@ -69,15 +69,15 @@ obj/machinery/embedded_controller/radio/Destroy()
 	else
 		icon_state = "airlock_control_off"
 
-/obj/machinery/embedded_controller/radio/post_signal(datum/signal/signal, var/filter = null)
+/obj/machinery/embedded_controller/radio/post_signal(datum/signal/signal, var/filt = null)
 	signal.transmission_method = TRANSMISSION_RADIO
 	if(radio_connection)
 		//use_power(radio_power_use)	//neat idea, but causes way too much lag.
-		return radio_connection.post_signal(src, signal, filter)
+		return radio_connection.post_signal(src, signal, filt)
 	else
 		qdel(signal)
 
 /obj/machinery/embedded_controller/radio/proc/set_frequency(new_frequency)
 	radio_controller.remove_object(src, frequency)
 	frequency = new_frequency
-	radio_connection = radio_controller.add_object(src, frequency, radio_filter)
+	radio_connection = radio_controller.add_object(src, frequency, radio_filt)

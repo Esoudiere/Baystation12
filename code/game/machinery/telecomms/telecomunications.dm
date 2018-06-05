@@ -37,8 +37,8 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 	var/listening_level = 0	// 0 = auto set in New() - this is the z level that the machine is listening to.
 
 
-/obj/machinery/telecomms/proc/relay_information(datum/signal/signal, filter, copysig, amount = 20)
-	// relay signal to all linked machinery that are of type [filter]. If signal has been sent [amount] times, stop sending
+/obj/machinery/telecomms/proc/relay_information(datum/signal/signal, filt, copysig, amount = 20)
+	// relay signal to all linked machinery that are of type [filt]. If signal has been sent [amount] times, stop sending
 
 	if(!on)
 		return
@@ -57,7 +57,7 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 	*/
 // Loop through all linked machines and send the signal or copy.
 	for(var/obj/machinery/telecomms/machine in links)
-		if(filter && !istype( machine, filter ))
+		if(filt && !istype( machine, filt ))
 			continue
 		if(!machine.on)
 			continue

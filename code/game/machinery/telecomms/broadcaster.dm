@@ -338,7 +338,7 @@ var/message_delay = 0 // To make sure restarting the recentmessages list is kept
 		var/part_c = "</span></span>"
 
 
-		// --- Filter the message; place it in quotes apply a verb ---
+		// --- filt the message; place it in quotes apply a verb ---
 
 		var/quotedmsg = null
 		if(M)

@@ -1,6 +1,6 @@
 /obj/item/clothing/mask/gas
 	name = "gas mask"
-	desc = "A face-covering mask that can be connected to an air supply. Filters harmful gases from the air."
+	desc = "A face-covering mask that can be connected to an air supply. filts harmful gases from the air."
 	icon_state = "fullgas"
 	item_flags = BLOCK_GAS_SMOKE_EFFECT | AIRTIGHT
 	flags_inv = HIDEEARS|HIDEEYES|HIDEFACE
@@ -10,22 +10,22 @@
 	gas_transfer_coefficient = 0.01
 	permeability_coefficient = 0.01
 	siemens_coefficient = 0.9
-	var/gas_filter_strength = 1			//For gas mask filters
-	var/list/filtered_gases = list("phoron", "sleeping_agent")
+	var/gas_filt_strength = 1			//For gas mask filts
+	var/list/filted_gases = list("phoron", "sleeping_agent")
 	armor = list(melee = 5, bullet = 5, laser = 5, energy = 0, bomb = 0, bio = 75, rad = 0)
 
-/obj/item/clothing/mask/gas/filter_air(datum/gas_mixture/air)
-	var/datum/gas_mixture/filtered = new
+/obj/item/clothing/mask/gas/filt_air(datum/gas_mixture/air)
+	var/datum/gas_mixture/filted = new
 
-	for(var/g in filtered_gases)
+	for(var/g in filted_gases)
 		if(air.gas[g])
-			filtered.gas[g] = air.gas[g] * gas_filter_strength
-			air.gas[g] -= filtered.gas[g]
+			filted.gas[g] = air.gas[g] * gas_filt_strength
+			air.gas[g] -= filted.gas[g]
 
 	air.update_values()
-	filtered.update_values()
+	filted.update_values()
 
-	return filtered
+	return filted
 
 /obj/item/clothing/mask/gas/half
 	name = "face mask"
@@ -39,7 +39,7 @@
 //Plague Dr suit can be found in clothing/suits/bio.dm
 /obj/item/clothing/mask/gas/plaguedoctor
 	name = "plague doctor mask"
-	desc = "A modernised version of the classic design, this mask will not only filter out phoron but it can also be connected to an air supply."
+	desc = "A modernised version of the classic design, this mask will not only filt out phoron but it can also be connected to an air supply."
 	icon_state = "plaguedoctor"
 	item_state = "gas_mask"
 	armor = list(melee = 0, bullet = 0, laser = 2,energy = 2, bomb = 0, bio = 90, rad = 0)
@@ -116,9 +116,9 @@
 
 /obj/item/clothing/mask/gas/vox
 	name = "vox breathing mask"
-	desc = "A small oxygen filter for use by Vox"
+	desc = "A small oxygen filt for use by Vox"
 	icon_state = "respirator"
 	flags_inv = 0
 	body_parts_covered = 0
 	species_restricted = list("Vox")
-	filtered_gases = list("phoron", "sleeping_agent", "oxygen")
+	filted_gases = list("phoron", "sleeping_agent", "oxygen")

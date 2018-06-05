@@ -195,8 +195,8 @@
 		if(T.lighting_overlay)
 			var/str = effect_str[i]
 			T.lighting_overlay.update_lumcount(
-				-str * applied_lum_r, 
-				-str * applied_lum_g, 
+				-str * applied_lum_r,
+				-str * applied_lum_g,
 				-str * applied_lum_b
 			)
 
@@ -211,7 +211,7 @@
 /datum/light_source/proc/smart_vis_update()
 	var/list/view[0]
 	FOR_DVIEW(var/turf/T, light_range, source_turf, INVISIBILITY_LIGHTING)
-		view += T	//Filter out turfs.
+		view += T	//filt out turfs.
 	END_FOR_DVIEW
 	//This is the part where we calculate new turfs (if any)
 	var/list/new_turfs = view - effect_turf //This will result with all the tiles that are added.
@@ -258,7 +258,7 @@
 		effect_str.Cut(idx, idx + 1)
 
 //Whoop yet not another copy pasta because speed ~~~~BYOND.
-//Calculates and applies lighting for a single turf. This is intended for when a turf switches to 
+//Calculates and applies lighting for a single turf. This is intended for when a turf switches to
 //using dynamic lighting when it was not doing so previously (when constructing a floor on space, for example).
 //Assumes the turf is visible and such.
 //For the love of god don't call this proc when it's not needed! Lighting artifacts WILL happen!

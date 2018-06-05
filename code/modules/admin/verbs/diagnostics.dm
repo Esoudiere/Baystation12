@@ -83,12 +83,12 @@
 		if (!fqs)
 			output += "&nbsp;&nbsp;<b>ERROR</b><br>"
 			continue
-		for (var/filter in fqs.devices)
-			var/list/f = fqs.devices[filter]
+		for (var/filt in fqs.devices)
+			var/list/f = fqs.devices[filt]
 			if (!f)
-				output += "&nbsp;&nbsp;[filter]: ERROR<br>"
+				output += "&nbsp;&nbsp;[filt]: ERROR<br>"
 				continue
-			output += "&nbsp;&nbsp;[filter]: [f.len]<br>"
+			output += "&nbsp;&nbsp;[filt]: [f.len]<br>"
 			for (var/device in f)
 				if (isobj(device))
 					output += "&nbsp;&nbsp;&nbsp;&nbsp;[device] ([device:x],[device:y],[device:z] in area [get_area(device:loc)])<br>"
@@ -172,16 +172,16 @@
 	for(var/t in jobban_keylist)
 		to_chat(usr, "[t]")
 
-/client/proc/print_jobban_old_filter()
+/client/proc/print_jobban_old_filt()
 	set name = "Search Jobban Log"
 	set desc = "This searches all the active jobban entries for the current round and outputs the results to standard output."
 	set category = "Debug"
 
-	var/filter = input("Contains what?","Filter") as text|null
-	if(!filter)
+	var/filt = input("Contains what?","filt") as text|null
+	if(!filt)
 		return
 
 	to_chat(usr, "<b>Jobbans active in this round.</b>")
 	for(var/t in jobban_keylist)
-		if(findtext(t, filter))
+		if(findtext(t, filt))
 			to_chat(usr, "[t]")

@@ -1,14 +1,14 @@
 /datum/admin_secret_item/investigation/admin_pms
 	name = "Admin PMs"
 
-/datum/admin_secret_item/investigation/admin_pms/execute(var/mob/user, var/filter)
+/datum/admin_secret_item/investigation/admin_pms/execute(var/mob/user, var/filt)
 	. = ..()
 	if(!.)
 		return
 	var/dat = list()
-	dat += "<a href='?src=\ref[src];filter=[filter]'>Refresh</a> Filtering on: "
-	if(filter)
-		dat += " [filter] <a href='?src=\ref[src]'>Clear</a>"
+	dat += "<a href='?src=\ref[src];filt=[filt]'>Refresh</a> filting on: "
+	if(filt)
+		dat += " [filt] <a href='?src=\ref[src]'>Clear</a>"
 	else
 		dat += "None"
 	dat += "<HR>"
@@ -19,13 +19,13 @@
 		var/datum/client_lite/sender = pm.sender
 		var/datum/client_lite/receiver = pm.receiver
 
-		if(filter && !(sender.ckey == filter || (receiver && receiver.ckey == filter)))
+		if(filt && !(sender.ckey == filt || (receiver && receiver.ckey == filt)))
 			continue
 
 		if(receiver)
-			dat += "<tr><td>[pm.station_time]</td><td>[sender.key_name(FALSE)] <a href='?src=\ref[src];filter=[html_encode(sender.ckey)]'>F</a></td><td>[receiver.key_name(FALSE)] <a href='?src=\ref[src];filter=[receiver.ckey]'>F</a></td></tr>"
+			dat += "<tr><td>[pm.station_time]</td><td>[sender.key_name(FALSE)] <a href='?src=\ref[src];filt=[html_encode(sender.ckey)]'>F</a></td><td>[receiver.key_name(FALSE)] <a href='?src=\ref[src];filt=[receiver.ckey]'>F</a></td></tr>"
 		else
-			dat += "<tr><td>[pm.station_time]</td><td>[sender.key_name(FALSE)] <a href='?src=\ref[src];filter=[html_encode(sender.ckey)]'>F</a></td><td></td></tr>"
+			dat += "<tr><td>[pm.station_time]</td><td>[sender.key_name(FALSE)] <a href='?src=\ref[src];filt=[html_encode(sender.ckey)]'>F</a></td><td></td></tr>"
 		dat += "<tr><td colspan=3>[pm.message]</td></tr>"
 	dat += "</table>"
 
@@ -37,4 +37,4 @@
 	. = ..()
 	if(.)
 		return
-	execute(usr, href_list["filter"])
+	execute(usr, href_list["filt"])

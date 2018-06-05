@@ -107,7 +107,7 @@ var/global/list/navbeacons			// no I don't like putting this in, but it will do 
 		for(var/key in codes)
 			signal.data[key] = codes[key]
 
-		frequency.post_signal(src, signal, filter = RADIO_NAVBEACONS)
+		frequency.post_signal(src, signal, filt = RADIO_NAVBEACONS)
 
 
 	attackby(var/obj/item/I, var/mob/user)

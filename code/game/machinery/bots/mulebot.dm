@@ -63,8 +63,8 @@
 
 	spawn(5)	// must wait for map loading to finish
 		if(radio_controller)
-			radio_controller.add_object(src, control_freq, filter = RADIO_MULEBOT)
-			radio_controller.add_object(src, beacon_freq, filter = RADIO_NAVBEACONS)
+			radio_controller.add_object(src, control_freq, filt = RADIO_MULEBOT)
+			radio_controller.add_object(src, beacon_freq, filt = RADIO_NAVBEACONS)
 
 		var/count = 0
 		for(var/obj/machinery/bot/mulebot/other in world)
@@ -847,9 +847,9 @@
 //		log_debug("sent [key],[keyval[key]] on [freq]")
 
 	if (signal.data["findbeacon"])
-		frequency.post_signal(src, signal, filter = RADIO_NAVBEACONS)
+		frequency.post_signal(src, signal, filt = RADIO_NAVBEACONS)
 	else if (signal.data["type"] == "mulebot")
-		frequency.post_signal(src, signal, filter = RADIO_MULEBOT)
+		frequency.post_signal(src, signal, filt = RADIO_MULEBOT)
 	else
 		frequency.post_signal(src, signal)
 

@@ -8,7 +8,7 @@
 	var/mob/living/carbon/human/occupant = null
 	var/list/available_chemicals = list("inaprovaline" = "Inaprovaline", "stoxin" = "Soporific", "paracetamol" = "Paracetamol", "anti_toxin" = "Dylovene", "dexalin" = "Dexalin")
 	var/obj/item/weapon/reagent_containers/glass/beaker = null
-	var/filtering = 0
+	var/filting = 0
 
 	use_power = 1
 	idle_power_usage = 15
@@ -25,7 +25,7 @@
 	if(stat & (NOPOWER|BROKEN))
 		return
 
-	if(filtering > 0)
+	if(filting > 0)
 		if(beaker)
 			if(beaker.reagents.total_volume < beaker.reagents.maximum_volume)
 				var/pumped = 0
@@ -35,7 +35,7 @@
 				if(ishuman(occupant))
 					occupant.vessel.trans_to_obj(beaker, pumped + 1)
 		else
-			toggle_filter()
+			toggle_filt()
 
 /obj/machinery/sleeper/update_icon()
 	icon_state = "sleeper_[occupant ? "1" : "0"]"
@@ -84,7 +84,7 @@
 		data["beaker"] = beaker.reagents.get_free_space()
 	else
 		data["beaker"] = -1
-	data["filtering"] = filtering
+	data["filting"] = filting
 
 	ui = nanomanager.try_update_ui(user, src, ui_key, ui, data, force_open)
 	if(!ui)
@@ -107,9 +107,9 @@
 		go_out()
 	if(href_list["beaker"])
 		remove_beaker()
-	if(href_list["filter"])
-		if(filtering != text2num(href_list["filter"]))
-			toggle_filter()
+	if(href_list["filt"])
+		if(filting != text2num(href_list["filt"]))
+			toggle_filt()
 	if(href_list["chemical"] && href_list["amount"])
 		if(occupant && occupant.stat != DEAD)
 			if(href_list["chemical"] in available_chemicals) // Your hacks are bad and you should feel bad
@@ -145,8 +145,8 @@
 	go_out()
 
 /obj/machinery/sleeper/emp_act(var/severity)
-	if(filtering)
-		toggle_filter()
+	if(filting)
+		toggle_filt()
 
 	if(stat & (BROKEN|NOPOWER))
 		..(severity)
@@ -156,11 +156,11 @@
 		go_out()
 
 	..(severity)
-/obj/machinery/sleeper/proc/toggle_filter()
+/obj/machinery/sleeper/proc/toggle_filt()
 	if(!occupant || !beaker)
-		filtering = 0
+		filting = 0
 		return
-	filtering = !filtering
+	filting = !filting
 
 /obj/machinery/sleeper/proc/go_in(var/mob/M, var/mob/user)
 	if(!M)
@@ -203,13 +203,13 @@
 		A.loc = loc
 	update_use_power(1)
 	update_icon()
-	toggle_filter()
+	toggle_filt()
 
 /obj/machinery/sleeper/proc/remove_beaker()
 	if(beaker)
 		beaker.loc = loc
 		beaker = null
-		toggle_filter()
+		toggle_filt()
 
 /obj/machinery/sleeper/proc/inject_chemical(var/mob/living/user, var/chemical, var/amount)
 	if(stat & (BROKEN|NOPOWER))

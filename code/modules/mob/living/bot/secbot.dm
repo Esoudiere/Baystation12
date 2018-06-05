@@ -76,8 +76,8 @@
 
 /mob/living/bot/secbot/initialize()
 	if(radio_controller)
-		radio_controller.add_object(listener, control_freq, filter = RADIO_SECBOT)
-		radio_controller.add_object(listener, beacon_freq, filter = RADIO_NAVBEACONS)
+		radio_controller.add_object(listener, control_freq, filt = RADIO_SECBOT)
+		radio_controller.add_object(listener, beacon_freq, filt = RADIO_NAVBEACONS)
 
 /mob/living/bot/secbot/turn_on()
 	..()
@@ -423,9 +423,9 @@
 	signal.data = keyval.Copy()
 
 	if(signal.data["findbeacon"])
-		frequency.post_signal(secbot, signal, filter = RADIO_NAVBEACONS)
+		frequency.post_signal(secbot, signal, filt = RADIO_NAVBEACONS)
 	else if(signal.data["type"] == "secbot")
-		frequency.post_signal(secbot, signal, filter = RADIO_SECBOT)
+		frequency.post_signal(secbot, signal, filt = RADIO_SECBOT)
 	else
 		frequency.post_signal(secbot, signal)
 

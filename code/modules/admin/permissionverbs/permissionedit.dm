@@ -38,7 +38,7 @@
 
 	output += {"
 </table></div>
-<div id='top'><b>Search:</b> <input type='text' id='filter' value='' style='width:70%;' onkeyup='updateSearch();'></div>
+<div id='top'><b>Search:</b> <input type='text' id='filt' value='' style='width:70%;' onkeyup='updateSearch();'></div>
 </body>
 </html>"}
 

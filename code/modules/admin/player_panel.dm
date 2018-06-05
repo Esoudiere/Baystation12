@@ -15,15 +15,15 @@
 				function updateSearch(){
 
 
-					var filter_text = document.getElementById('filter');
-					var filter = filter_text.value.toLowerCase();
+					var filt_text = document.getElementById('filt');
+					var filt = filt_text.value.toLowerCase();
 
 					if(complete_list != null && complete_list != ""){
 						var mtbl = document.getElementById("maintable_data_archive");
 						mtbl.innerHTML = complete_list;
 					}
 
-					if(filter.value == ""){
+					if(filt.value == ""){
 						return;
 					}else{
 
@@ -41,8 +41,8 @@
 								var lsearch = td.getElementsByTagName("b");
 								var search = lsearch\[0\];
 								//var inner_span = li.getElementsByTagName("span")\[1\] //Should only ever contain one element.
-								//document.write("<p>"+search.innerText+"<br>"+filter+"<br>"+search.innerText.indexOf(filter))
-								if ( search.innerText.toLowerCase().indexOf(filter) == -1 )
+								//document.write("<p>"+search.innerText+"<br>"+filt+"<br>"+search.innerText.indexOf(filt))
+								if ( search.innerText.toLowerCase().indexOf(filt) == -1 )
 								{
 									//document.write("a");
 									//ltr.removeChild(tr);
@@ -173,9 +173,9 @@
 				}
 
 				function selectTextField(){
-					var filter_text = document.getElementById('filter');
-					filter_text.focus();
-					filter_text.select();
+					var filt_text = document.getElementById('filt');
+					filt_text.focus();
+					filt_text.select();
 				}
 
 			</script>
@@ -200,7 +200,7 @@
 			</tr>
 			<tr id='search_tr'>
 				<td align='center'>
-					<b>Search:</b> <input type='text' id='filter' value='' style='width:300px;'>
+					<b>Search:</b> <input type='text' id='filt' value='' style='width:300px;'>
 				</td>
 			</tr>
 	</table>

@@ -24,8 +24,8 @@
 	var/panic = 0 //is this scrubber panicked?
 
 	var/area_uid
-	var/radio_filter_out
-	var/radio_filter_in
+	var/radio_filt_out
+	var/radio_filt_in
 
 	var/welded = 0
 
@@ -35,7 +35,7 @@
 
 /obj/machinery/atmospherics/unary/vent_scrubber/New()
 	..()
-	air_contents.volume = ATMOS_DEFAULT_VOLUME_FILTER
+	air_contents.volume = ATMOS_DEFAULT_VOLUME_filt
 
 	icon = null
 	initial_loc = get_area(loc)
@@ -88,7 +88,7 @@
 /obj/machinery/atmospherics/unary/vent_scrubber/proc/set_frequency(new_frequency)
 	radio_controller.remove_object(src, frequency)
 	frequency = new_frequency
-	radio_connection = radio_controller.add_object(src, frequency, radio_filter_in)
+	radio_connection = radio_controller.add_object(src, frequency, radio_filt_in)
 
 /obj/machinery/atmospherics/unary/vent_scrubber/proc/broadcast_status()
 	if(!radio_connection)
@@ -105,11 +105,11 @@
 		"power" = use_power,
 		"scrubbing" = scrubbing,
 		"panic" = panic,
-		"filter_o2" = ("oxygen" in scrubbing_gas),
-		"filter_n2" = ("nitrogen" in scrubbing_gas),
-		"filter_co2" = ("carbon_dioxide" in scrubbing_gas),
-		"filter_phoron" = ("phoron" in scrubbing_gas),
-		"filter_n2o" = ("sleeping_agent" in scrubbing_gas),
+		"filt_o2" = ("oxygen" in scrubbing_gas),
+		"filt_n2" = ("nitrogen" in scrubbing_gas),
+		"filt_co2" = ("carbon_dioxide" in scrubbing_gas),
+		"filt_phoron" = ("phoron" in scrubbing_gas),
+		"filt_n2o" = ("sleeping_agent" in scrubbing_gas),
 		"sigtype" = "status"
 	)
 	if(!initial_loc.air_scrub_names[id_tag])
@@ -117,14 +117,14 @@
 		initial_loc.air_scrub_names[id_tag] = new_name
 		src.name = new_name
 	initial_loc.air_scrub_info[id_tag] = signal.data
-	radio_connection.post_signal(src, signal, radio_filter_out)
+	radio_connection.post_signal(src, signal, radio_filt_out)
 
 	return 1
 
 /obj/machinery/atmospherics/unary/vent_scrubber/initialize()
 	..()
-	radio_filter_in = frequency==initial(frequency)?(RADIO_FROM_AIRALARM):null
-	radio_filter_out = frequency==initial(frequency)?(RADIO_TO_AIRALARM):null
+	radio_filt_in = frequency==initial(frequency)?(RADIO_FROM_AIRALARM):null
+	radio_filt_out = frequency==initial(frequency)?(RADIO_TO_AIRALARM):null
 	if (frequency)
 		set_frequency(frequency)
 		src.broadcast_status()

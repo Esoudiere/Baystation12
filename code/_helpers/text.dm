@@ -1,5 +1,5 @@
 /*
- * Holds procs designed to help with filtering text
+ * Holds procs designed to help with filting text
  * Contains groups:
  *			SQL sanitization
  *			Text sanitization
@@ -57,7 +57,7 @@
 /proc/sanitizeSafe(var/input, var/max_length = MAX_MESSAGE_LEN, var/encode = 1, var/trim = 1, var/extra = 1)
 	return sanitize(replace_characters(input, list(">"=" ","<"=" ", "\""="'")), max_length, encode, trim, extra)
 
-//Filters out undesirable characters from names
+//filts out undesirable characters from names
 /proc/sanitizeName(var/input, var/max_length = MAX_NAME_LEN, var/allow_numbers = 0)
 	if(!input || length(input) > max_length)
 		return //Rejects the input if it is null or if it is longer then the max length allowed

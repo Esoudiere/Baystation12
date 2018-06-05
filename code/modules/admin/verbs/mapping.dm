@@ -143,7 +143,7 @@ var/list/debug_verbs = list (
         ,/client/proc/cmd_admin_rejuvenate
         ,/datum/admins/proc/show_traitor_panel
         ,/client/proc/print_jobban_old
-        ,/client/proc/print_jobban_old_filter
+        ,/client/proc/print_jobban_old_filt
         ,/client/proc/forceEvent
         ,/client/proc/Zone_Info
         ,/client/proc/Test_ZAS_Connection

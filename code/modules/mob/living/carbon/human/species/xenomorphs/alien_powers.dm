@@ -242,7 +242,7 @@ mob/living/carbon/human/proc/xeno_infest(mob/living/carbon/human/M as mob in ovi
 	var/obj/item/organ/internal/xenos/hivenode/node = new(affecting)
 	node.replaced(M,affecting)
 
-/mob/living/carbon/human/proc/pry_open(obj/machinery/door/A in filter_list(oview(1), /obj/machinery/door))
+/mob/living/carbon/human/proc/pry_open(obj/machinery/door/A in filt_list(oview(1), /obj/machinery/door))
 	set name = "Pry Open Airlock"
 	set desc = "Pry open an airlock with your claws."
 	set category = "Abilities"

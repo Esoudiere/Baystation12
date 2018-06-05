@@ -8,7 +8,7 @@ var/list
 					"hsbglass" = "Spawn 50 Glass",
 					"hsbairlock" = "Spawn Airlock",
 					"hsbregulator" = "Spawn Air Regulator",
-					"hsbfilter" = "Spawn Air Filter",
+					"hsbfilt" = "Spawn Air filt",
 					"hsbcanister" = "Spawn Canister",
 					"hsbfueltank" = "Spawn Welding Fuel Tank",
 					"hsbwater	tank" = "Spawn Water Tank",

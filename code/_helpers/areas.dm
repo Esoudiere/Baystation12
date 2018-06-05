@@ -1,7 +1,7 @@
 /*
 	List generation helpers
 */
-/proc/get_filtered_areas(var/list/predicates = list(/proc/is_area_with_turf))
+/proc/get_filted_areas(var/list/predicates = list(/proc/is_area_with_turf))
 	. = list()
 	if(!predicates)
 		return
@@ -33,12 +33,12 @@
 
 /proc/group_areas_by_name(var/list/predicates)
 	. = list()
-	for(var/area/A in get_filtered_areas(predicates))
+	for(var/area/A in get_filted_areas(predicates))
 		group_by(., A.name, A)
 
 /proc/group_areas_by_z_level(var/list/predicates)
 	. = list()
-	for(var/area/A in get_filtered_areas(predicates))
+	for(var/area/A in get_filted_areas(predicates))
 		group_by(., num2text(A.z), A)
 
 /*
@@ -55,7 +55,7 @@
 		return pick(turfs)
 
 /proc/pick_area(var/list/predicates)
-	var/list/areas = get_filtered_areas(predicates)
+	var/list/areas = get_filted_areas(predicates)
 	if(areas && areas.len)
 		. = pick(areas)
 

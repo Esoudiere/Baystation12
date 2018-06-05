@@ -45,8 +45,8 @@
 	var/frequency = 1439
 	var/datum/radio_frequency/radio_connection
 
-	var/radio_filter_out
-	var/radio_filter_in
+	var/radio_filt_out
+	var/radio_filt_in
 
 /obj/machinery/atmospherics/unary/vent_pump/on
 	use_power = 1
@@ -248,7 +248,7 @@
 		src.name = new_name
 	initial_loc.air_vent_info[id_tag] = signal.data
 
-	radio_connection.post_signal(src, signal, radio_filter_out)
+	radio_connection.post_signal(src, signal, radio_filt_out)
 
 	return 1
 
@@ -257,10 +257,10 @@
 	..()
 
 	//some vents work his own special way
-	radio_filter_in = frequency==1439?(RADIO_FROM_AIRALARM):null
-	radio_filter_out = frequency==1439?(RADIO_TO_AIRALARM):null
+	radio_filt_in = frequency==1439?(RADIO_FROM_AIRALARM):null
+	radio_filt_out = frequency==1439?(RADIO_TO_AIRALARM):null
 	if(frequency)
-		radio_connection = register_radio(src, frequency, frequency, radio_filter_in)
+		radio_connection = register_radio(src, frequency, frequency, radio_filt_in)
 		src.broadcast_status()
 
 /obj/machinery/atmospherics/unary/vent_pump/receive_signal(datum/signal/signal)

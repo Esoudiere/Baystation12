@@ -411,7 +411,7 @@ BLIND     // can't see anything
 		ret.icon_state = icon_state
 	return ret
 
-/obj/item/clothing/mask/proc/filter_air(datum/gas_mixture/air)
+/obj/item/clothing/mask/proc/filt_air(datum/gas_mixture/air)
 	return
 
 ///////////////////////////////////////////////////////////////////////

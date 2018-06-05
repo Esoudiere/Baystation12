@@ -250,7 +250,7 @@
 	contains = list(/obj/item/weapon/circuitboard/bluespacerelay,
 					/obj/item/weapon/stock_parts/manipulator,
 					/obj/item/weapon/stock_parts/manipulator,
-					/obj/item/weapon/stock_parts/subspace/filter,
+					/obj/item/weapon/stock_parts/subspace/filt,
 					/obj/item/weapon/stock_parts/subspace/crystal,
 					/obj/item/weapon/storage/toolbox/electrical)
 	cost = 75

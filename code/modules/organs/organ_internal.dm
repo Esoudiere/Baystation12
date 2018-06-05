@@ -172,15 +172,15 @@
 			src.damage = 0
 
 		// Get the effectiveness of the liver.
-		var/filter_effect = 3
+		var/filt_effect = 3
 		if(is_bruised())
-			filter_effect -= 1
+			filt_effect -= 1
 		if(is_broken())
-			filter_effect -= 2
+			filt_effect -= 2
 
 		// Do some reagent processing.
 		if(owner.chem_effects[CE_ALCOHOL_TOXIC])
-			if(filter_effect < 3)
+			if(filt_effect < 3)
 				owner.adjustToxLoss(owner.chem_effects[CE_ALCOHOL_TOXIC] * 0.1 * PROCESS_ACCURACY)
 			else
 				take_damage(owner.chem_effects[CE_ALCOHOL_TOXIC] * 0.1 * PROCESS_ACCURACY, prob(1)) // Chance to warn them

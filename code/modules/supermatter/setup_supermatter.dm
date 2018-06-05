@@ -56,7 +56,7 @@
 				C.energy_setting = ENERGY_PHORON
 				continue
 
-	for(var/obj/effect/engine_setup/filter/F in world)
+	for(var/obj/effect/engine_setup/filt/F in world)
 		F.coolant = response
 
 	var/list/delayed_objects = list()
@@ -206,22 +206,22 @@
 
 
 
-// Sets up filters. This assumes filters are set to filter out N2 back to the core loop by default!
-/obj/effect/engine_setup/filter/
-	name = "Omni Filter Marker"
+// Sets up filts. This assumes filts are set to filt out N2 back to the core loop by default!
+/obj/effect/engine_setup/filt/
+	name = "Omni filt Marker"
 	var/coolant = null
 
-/obj/effect/engine_setup/filter/activate()
+/obj/effect/engine_setup/filt/activate()
 	..()
-	var/obj/machinery/atmospherics/omni/filter/F = locate() in get_turf(src)
+	var/obj/machinery/atmospherics/omni/filt/F = locate() in get_turf(src)
 	if(!F)
-		log_and_message_admins("## WARNING: Unable to locate omni filter at [x] [y] [z]!")
+		log_and_message_admins("## WARNING: Unable to locate omni filt at [x] [y] [z]!")
 		return SETUP_WARNING
 	if(!coolant)
 		log_and_message_admins("## WARNING: No coolant type set at [x] [y] [z]!")
 		return SETUP_WARNING
 
-	// Non-nitrogen coolant, adjust the filter's config first.
+	// Non-nitrogen coolant, adjust the filt's config first.
 	if(coolant != "N2")
 		for(var/datum/omni_port/P in F.ports)
 			if(P.mode != ATM_N2)
@@ -233,9 +233,9 @@
 				P.mode = ATM_CO2
 				break
 			else
-				log_and_message_admins("## WARNING: Inapropriate filter coolant type set at [x] [y] [z]!")
+				log_and_message_admins("## WARNING: Inapropriate filt coolant type set at [x] [y] [z]!")
 				return SETUP_WARNING
-		F.rebuild_filtering_list()
+		F.rebuild_filting_list()
 
 	F.use_power = 1
 	F.update_icon()

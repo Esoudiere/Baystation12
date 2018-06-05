@@ -62,11 +62,11 @@
 		handle_chemical_smoke(environment) //handle chemical smoke while we're at it
 
 	if(breath && breath.total_moles)
-		//handle mask filtering
+		//handle mask filting
 		if(istype(wear_mask, /obj/item/clothing/mask) && breath)
 			var/obj/item/clothing/mask/M = wear_mask
-			var/datum/gas_mixture/filtered = M.filter_air(breath)
-			loc.assume_air(filtered)
+			var/datum/gas_mixture/filted = M.filt_air(breath)
+			loc.assume_air(filted)
 		return breath
 	return null
 

@@ -145,7 +145,7 @@
 			dat += "<li>\ref[T] [T.name] ([T.id])  <a href='?src=\ref[src];unlink=[i]'>\[X\]</a></li>"
 		dat += "</ol>"
 
-		dat += "<br>Filtering Frequencies: "
+		dat += "<br>filting Frequencies: "
 
 		i = 0
 		if(length(freq_listening))
@@ -158,7 +158,7 @@
 		else
 			dat += "NONE"
 
-		dat += "<br>  <a href='?src=\ref[src];input=freq'>\[Add Filter\]</a>"
+		dat += "<br>  <a href='?src=\ref[src];input=freq'>\[Add filt\]</a>"
 		dat += "<hr>"
 
 		if(P)
@@ -333,20 +333,20 @@
 
 
 			if("freq")
-				var/newfreq = input(usr, "Specify a new frequency to filter (GHz). Decimals assigned automatically.", src, network) as null|num
+				var/newfreq = input(usr, "Specify a new frequency to filt (GHz). Decimals assigned automatically.", src, network) as null|num
 				if(newfreq && canAccess(usr))
 					if(findtext(num2text(newfreq), "."))
 						newfreq *= 10 // shift the decimal one place
 					if(!(newfreq in freq_listening) && newfreq < 10000)
 						freq_listening.Add(newfreq)
-						temp = "<font color = #666633>-% New frequency filter assigned: \"[newfreq] GHz\" %-</font>"
+						temp = "<font color = #666633>-% New frequency filt assigned: \"[newfreq] GHz\" %-</font>"
 
 	if(href_list["delete"])
 
 		// changed the layout about to workaround a pesky runtime -- Doohl
 
 		var/x = text2num(href_list["delete"])
-		temp = "<font color = #666633>-% Removed frequency filter [x] %-</font>"
+		temp = "<font color = #666633>-% Removed frequency filt [x] %-</font>"
 		freq_listening.Remove(x)
 
 	if(href_list["unlink"])

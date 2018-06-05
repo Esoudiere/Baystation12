@@ -87,8 +87,8 @@
 				</td>
 				<td width='80%'>
 					<input type='text'
-					       id='filter'
-					       name='filter_text'
+					       id='filt'
+					       name='filt_text'
 					       value=''
 					       style='width:100%;' />
 				</td>

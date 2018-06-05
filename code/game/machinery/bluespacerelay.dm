@@ -31,7 +31,7 @@
 	component_parts += new /obj/item/weapon/circuitboard/bluespacerelay(src)
 	component_parts += new /obj/item/weapon/stock_parts/manipulator(src)
 	component_parts += new /obj/item/weapon/stock_parts/manipulator(src)
-	component_parts += new /obj/item/weapon/stock_parts/subspace/filter(src)
+	component_parts += new /obj/item/weapon/stock_parts/subspace/filt(src)
 	component_parts += new /obj/item/weapon/stock_parts/subspace/crystal(src)
 	component_parts += new /obj/item/stack/cable_coil(src, 30)
 /obj/machinery/bluespacerelay/proc/update_power()

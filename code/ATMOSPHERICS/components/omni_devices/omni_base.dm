@@ -109,8 +109,8 @@
 	var/core_icon = null
 	if(istype(src, /obj/machinery/atmospherics/omni/mixer))
 		core_icon = "mixer"
-	else if(istype(src, /obj/machinery/atmospherics/omni/filter))
-		core_icon = "filter"
+	else if(istype(src, /obj/machinery/atmospherics/omni/filt))
+		core_icon = "filt"
 	else
 		return
 
@@ -173,7 +173,7 @@
 				ic_on += "_out_glow"
 				ic_off += "_out"
 			if(ATM_O2 to ATM_N2O)
-				ic_on += "_filter"
+				ic_on += "_filt"
 				ic_off += "_out"
 
 		ic_on = icon_manager.get_atmos_icon("omni", , , ic_on)

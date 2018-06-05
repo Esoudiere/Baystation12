@@ -1358,7 +1358,7 @@
 	proc/updatedesc()
 		desc = initial(desc)
 		if(sortType)
-			desc += "\nIt's filtering objects with the '[sortType]' tag."
+			desc += "\nIt's filting objects with the '[sortType]' tag."
 
 	proc/updatename()
 		if(sortType)
@@ -1396,7 +1396,7 @@
 			if(O.currTag)// Tag set
 				sortType = O.currTag
 				playsound(src.loc, 'sound/machines/twobeep.ogg', 100, 1)
-				to_chat(user, "<span class='notice'>Changed filter to '[sortType]'.</span>")
+				to_chat(user, "<span class='notice'>Changed filt to '[sortType]'.</span>")
 				updatename()
 				updatedesc()
 
@@ -1437,18 +1437,18 @@
 
 		return P
 
-//a three-way junction that filters all wrapped and tagged items
+//a three-way junction that filts all wrapped and tagged items
 /obj/structure/disposalpipe/sortjunction/wildcard
 	name = "wildcard sorting junction"
-	desc = "An underfloor disposal pipe which filters all wrapped and tagged items."
+	desc = "An underfloor disposal pipe which filts all wrapped and tagged items."
 	subtype = 1
 	divert_check(var/checkTag)
 		return checkTag != ""
 
-//junction that filters all untagged items
+//junction that filts all untagged items
 /obj/structure/disposalpipe/sortjunction/untagged
 	name = "untagged sorting junction"
-	desc = "An underfloor disposal pipe which filters all untagged items."
+	desc = "An underfloor disposal pipe which filts all untagged items."
 	subtype = 2
 	divert_check(var/checkTag)
 		return checkTag == ""

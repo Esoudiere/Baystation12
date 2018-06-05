@@ -276,7 +276,7 @@ var/global/list/default_medbay_channels = list(
 	if(!on) return 0 // the device has to be on
 	//  Fix for permacell radios, but kinda eh about actually fixing them.
 	if(!M || !message) return 0
-	
+
 	if(speaking && (speaking.flags & (NONVERBAL|SIGNLANG))) return 0
 
 	if(istype(M)) M.trigger_aiming(TARGET_CAN_RADIO)
@@ -413,11 +413,11 @@ var/global/list/default_medbay_channels = list(
 
   /* ###### Intercoms and station-bounced radios ###### */
 
-	var/filter_type = 2
+	var/filt_type = 2
 
 	/* --- Intercoms can only broadcast to other intercoms, but bounced radios can broadcast to bounced radios and intercoms --- */
 	if(istype(src, /obj/item/device/radio/intercom))
-		filter_type = 1
+		filt_type = 1
 
 
 	var/datum/signal/signal = new
@@ -471,7 +471,7 @@ var/global/list/default_medbay_channels = list(
 
 	return Broadcast_Message(connection, M, voicemask, pick(M.speak_emote),
 					  src, message, displayname, jobname, real_name, M.voice_name,
-					  filter_type, signal.data["compression"], list(position.z), connection.frequency,verb,speaking)
+					  filt_type, signal.data["compression"], list(position.z), connection.frequency,verb,speaking)
 
 
 /obj/item/device/radio/hear_talk(mob/M as mob, msg, var/verb = "says", var/datum/language/speaking = null)

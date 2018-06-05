@@ -8,7 +8,7 @@
 	var/pass_flags = 0
 	var/throwpass = 0
 	var/germ_level = GERM_LEVEL_AMBIENT // The higher the germ level, the more germ on the atom.
-	var/simulated = 1 //filter for actions - used by lighting overlays
+	var/simulated = 1 //filt for actions - used by lighting overlays
 	var/fluorescent // Shows up under a UV light.
 
 	///Chemistry.
@@ -92,28 +92,28 @@
 	return
 
 /*
- *	atom/proc/search_contents_for(path,list/filter_path=null)
+ *	atom/proc/search_contents_for(path,list/filt_path=null)
  * Recursevly searches all atom contens (including contents contents and so on).
  *
  * ARGS: path - search atom contents for atoms of this type
- *	   list/filter_path - if set, contents of atoms not of types in this list are excluded from search.
+ *	   list/filt_path - if set, contents of atoms not of types in this list are excluded from search.
  *
  * RETURNS: list of found atoms
  */
 
-/atom/proc/search_contents_for(path,list/filter_path=null)
+/atom/proc/search_contents_for(path,list/filt_path=null)
 	var/list/found = list()
 	for(var/atom/A in src)
 		if(istype(A, path))
 			found += A
-		if(filter_path)
+		if(filt_path)
 			var/pass = 0
-			for(var/type in filter_path)
+			for(var/type in filt_path)
 				pass |= istype(A, type)
 			if(!pass)
 				continue
 		if(A.contents.len)
-			found += A.search_contents_for(path,filter_path)
+			found += A.search_contents_for(path,filt_path)
 	return found
 
 

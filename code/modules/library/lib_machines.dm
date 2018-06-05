@@ -38,9 +38,9 @@ datum/borrowbook // Datum used to keep track of who has borrowed what when and f
 	switch(screenstate)
 		if(0)
 			dat += {"<h2>Search Settings</h2><br>
-			<A href='?src=\ref[src];settitle=1'>Filter by Title: [title]</A><BR>
-			<A href='?src=\ref[src];setcategory=1'>Filter by Category: [category]</A><BR>
-			<A href='?src=\ref[src];setauthor=1'>Filter by Author: [author]</A><BR>
+			<A href='?src=\ref[src];settitle=1'>filt by Title: [title]</A><BR>
+			<A href='?src=\ref[src];setcategory=1'>filt by Category: [category]</A><BR>
+			<A href='?src=\ref[src];setauthor=1'>filt by Author: [author]</A><BR>
 			<A href='?src=\ref[src];search=1'>\[Start Search\]</A><BR>"}
 		if(1)
 			establish_old_db_connection()

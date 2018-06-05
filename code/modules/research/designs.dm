@@ -596,11 +596,11 @@ other types of metals and chemistry for reagents).
 	build_path = /obj/item/weapon/stock_parts/subspace/ansible
 	sort_string = "UAAAA"
 
-/datum/design/item/stock_part/hyperwave_filter
-	id = "s-filter"
+/datum/design/item/stock_part/hyperwave_filt
+	id = "s-filt"
 	req_tech = list(TECH_DATA = 3, TECH_MAGNET = 3)
 	materials = list(DEFAULT_WALL_MATERIAL = 40, "silver" = 10)
-	build_path = /obj/item/weapon/stock_parts/subspace/filter
+	build_path = /obj/item/weapon/stock_parts/subspace/filt
 	sort_string = "UAAAB"
 
 /datum/design/item/stock_part/subspace_amplifier

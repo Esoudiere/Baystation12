@@ -3,11 +3,11 @@
 #define TELECOMMS_RECEPTION_RECEIVER 2
 #define TELECOMMS_RECEPTION_BOTH 3
 
-/proc/register_radio(source, old_frequency, new_frequency, radio_filter)
+/proc/register_radio(source, old_frequency, new_frequency, radio_filt)
 	if(old_frequency)
 		radio_controller.remove_object(source, old_frequency)
 	if(new_frequency)
-		return radio_controller.add_object(source, new_frequency, radio_filter)
+		return radio_controller.add_object(source, new_frequency, radio_filt)
 
 /proc/unregister_radio(source, frequency)
 	if(radio_controller)

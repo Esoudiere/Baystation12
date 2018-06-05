@@ -615,7 +615,7 @@ proc/dd_sortedTextList(list/incoming)
 
 #define listequal(A, B) (A.len == B.len && !length(A^B))
 
-/proc/filter_list(var/list/L, var/type)
+/proc/filt_list(var/list/L, var/type)
 	. = list()
 	for(var/entry in L)
 		if(istype(entry, type))

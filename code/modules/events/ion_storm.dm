@@ -87,10 +87,10 @@
 
 	if(message_servers)
 		for (var/obj/machinery/message_server/MS in message_servers)
-			MS.spamfilter.Cut()
+			MS.spamfilt.Cut()
 			var/i
-			for (i = 1, i <= MS.spamfilter_limit, i++)
-				MS.spamfilter += pick("kitty","HONK","rev","malf","liberty","freedom","drugs", "[station_short]", \
+			for (i = 1, i <= MS.spamfilt_limit, i++)
+				MS.spamfilt += pick("kitty","HONK","rev","malf","liberty","freedom","drugs", "[station_short]", \
 					"admin","ponies","heresy","meow","Pun Pun","monkey","Ian","moron","pizza","message","spam",\
 					"director", "Hello", "Hi!"," ","nuke","crate","dwarf","xeno")
 

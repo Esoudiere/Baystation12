@@ -96,19 +96,19 @@ var/list/restricted_camera_networks = list(NETWORK_ERT,NETWORK_MERCENARY,"Secret
 #define MAX_SIPHON_FLOWRATE   2500 // L/s. This can be used to balance how fast a room is siphoned. Anything higher than CELL_VOLUME has no effect.
 #define MAX_SCRUBBER_FLOWRATE 200  // L/s. Max flow rate when scrubbing from a turf.
 
-// These balance how easy or hard it is to create huge pressure gradients with pumps and filters.
+// These balance how easy or hard it is to create huge pressure gradients with pumps and filts.
 // Lower values means it takes longer to create large pressures differences.
 // Has no effect on pumping gasses from high pressure to low, only from low to high.
 #define ATMOS_PUMP_EFFICIENCY   2.5
-#define ATMOS_FILTER_EFFICIENCY 2.5
+#define ATMOS_filt_EFFICIENCY 2.5
 
-// Will not bother pumping or filtering if the gas source as fewer than this amount of moles, to help with performance.
+// Will not bother pumping or filting if the gas source as fewer than this amount of moles, to help with performance.
 #define MINIMUM_MOLES_TO_PUMP   0.01
-#define MINIMUM_MOLES_TO_FILTER 0.04
+#define MINIMUM_MOLES_TO_filt 0.04
 
 // The flow rate/effectiveness of various atmos devices is limited by their internal volume,
 // so for many atmos devices these will control maximum flow rates in L/s.
 #define ATMOS_DEFAULT_VOLUME_PUMP   200 // Liters.
-#define ATMOS_DEFAULT_VOLUME_FILTER 200 // L.
+#define ATMOS_DEFAULT_VOLUME_filt 200 // L.
 #define ATMOS_DEFAULT_VOLUME_MIXER  200 // L.
 #define ATMOS_DEFAULT_VOLUME_PIPE   70  // L.

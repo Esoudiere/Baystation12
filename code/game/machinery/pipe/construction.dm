@@ -15,7 +15,7 @@ Buildable meters
 #define PIPE_SCRUBBER			10
 //#define unsed	11
 //#define unsed	12
-#define PIPE_GAS_FILTER			13
+#define PIPE_GAS_filt			13
 #define PIPE_GAS_MIXER			14
 #define PIPE_PASSIVE_GATE       15
 #define PIPE_VOLUME_PUMP        16
@@ -27,11 +27,11 @@ Buildable meters
 #define PIPE_UP					21
 #define PIPE_DOWN				22
 ///// Z-Level stuff
-#define PIPE_GAS_FILTER_M		23
+#define PIPE_GAS_filt_M		23
 #define PIPE_GAS_MIXER_T		24
 #define PIPE_GAS_MIXER_M		25
 #define PIPE_OMNI_MIXER			26
-#define PIPE_OMNI_FILTER		27
+#define PIPE_OMNI_filt		27
 ///// Supply, scrubbers and universal pipes
 #define PIPE_UNIVERSAL				28
 #define PIPE_SUPPLY_STRAIGHT		29
@@ -116,14 +116,14 @@ Buildable meters
 			src.pipe_type = PIPE_VOLUME_PUMP
 		else if(istype(make_from, /obj/machinery/atmospherics/binary/pump))
 			src.pipe_type = PIPE_PUMP
-		else if(istype(make_from, /obj/machinery/atmospherics/trinary/filter/m_filter))
-			src.pipe_type = PIPE_GAS_FILTER_M
+		else if(istype(make_from, /obj/machinery/atmospherics/trinary/filt/m_filt))
+			src.pipe_type = PIPE_GAS_filt_M
 		else if(istype(make_from, /obj/machinery/atmospherics/trinary/mixer/t_mixer))
 			src.pipe_type = PIPE_GAS_MIXER_T
 		else if(istype(make_from, /obj/machinery/atmospherics/trinary/mixer/m_mixer))
 			src.pipe_type = PIPE_GAS_MIXER_M
-		else if(istype(make_from, /obj/machinery/atmospherics/trinary/filter))
-			src.pipe_type = PIPE_GAS_FILTER
+		else if(istype(make_from, /obj/machinery/atmospherics/trinary/filt))
+			src.pipe_type = PIPE_GAS_filt
 		else if(istype(make_from, /obj/machinery/atmospherics/trinary/mixer))
 			src.pipe_type = PIPE_GAS_MIXER
 		else if(istype(make_from, /obj/machinery/atmospherics/unary/vent_scrubber))
@@ -158,8 +158,8 @@ Buildable meters
 			src.pipe_type = PIPE_CAP
 		else if(istype(make_from, /obj/machinery/atmospherics/omni/mixer))
 			src.pipe_type = PIPE_OMNI_MIXER
-		else if(istype(make_from, /obj/machinery/atmospherics/omni/filter))
-			src.pipe_type = PIPE_OMNI_FILTER
+		else if(istype(make_from, /obj/machinery/atmospherics/omni/filt))
+			src.pipe_type = PIPE_OMNI_filt
 ///// Z-Level stuff
 		else if(istype(make_from, /obj/machinery/atmospherics/pipe/zpipe/up/supply))
 			src.pipe_type = PIPE_SUPPLY_UP
@@ -217,7 +217,7 @@ Buildable meters
 		"scrubber", \
 		"insulated pipe", \
 		"bent insulated pipe", \
-		"gas filter", \
+		"gas filt", \
 		"gas mixer", \
 		"pressure regulator", \
 		"high power pump", \
@@ -229,11 +229,11 @@ Buildable meters
 		"pipe up", \
 		"pipe down", \
 ///// Z-Level stuff
-		"gas filter m", \
+		"gas filt m", \
 		"gas mixer t", \
 		"gas mixer m", \
 		"omni mixer", \
-		"omni filter", \
+		"omni filt", \
 ///// Supply and scrubbers pipes
 		"universal pipe adapter", \
 		"supply pipe", \
@@ -267,7 +267,7 @@ Buildable meters
 		"scrubber", \
 		"insulated", \
 		"insulated", \
-		"filter", \
+		"filt", \
 		"mixer", \
 		"passivegate", \
 		"volumepump", \
@@ -279,11 +279,11 @@ Buildable meters
 		"cap", \
 		"cap", \
 ///// Z-Level stuff
-		"m_filter", \
+		"m_filt", \
 		"t_mixer", \
 		"m_mixer", \
 		"omni_mixer", \
-		"omni_filter", \
+		"omni_filt", \
 ///// Supply and scrubbers pipes
 		"universal", \
 		"simple", \
@@ -372,13 +372,13 @@ Buildable meters
 			return dir //dir|acw
 		if(PIPE_CONNECTOR,PIPE_UVENT,PIPE_SCRUBBER,PIPE_HEAT_EXCHANGE)
 			return dir
-		if(PIPE_MANIFOLD4W, PIPE_SUPPLY_MANIFOLD4W, PIPE_SCRUBBERS_MANIFOLD4W, PIPE_OMNI_MIXER, PIPE_OMNI_FILTER)
+		if(PIPE_MANIFOLD4W, PIPE_SUPPLY_MANIFOLD4W, PIPE_SCRUBBERS_MANIFOLD4W, PIPE_OMNI_MIXER, PIPE_OMNI_filt)
 			return dir|flip|cw|acw
 		if(PIPE_MANIFOLD, PIPE_SUPPLY_MANIFOLD, PIPE_SCRUBBERS_MANIFOLD)
 			return flip|cw|acw
-		if(PIPE_GAS_FILTER, PIPE_GAS_MIXER, PIPE_MTVALVE)
+		if(PIPE_GAS_filt, PIPE_GAS_MIXER, PIPE_MTVALVE)
 			return dir|flip|cw
-		if(PIPE_GAS_FILTER_M, PIPE_GAS_MIXER_M, PIPE_MTVALVEM)
+		if(PIPE_GAS_filt_M, PIPE_GAS_MIXER_M, PIPE_MTVALVEM)
 			return dir|flip|acw
 		if(PIPE_GAS_MIXER_T)
 			return dir|cw|acw
@@ -437,7 +437,7 @@ Buildable meters
 			set_dir(1)
 		else if(dir==8)
 			set_dir(4)
-	else if (pipe_type in list(PIPE_MANIFOLD4W, PIPE_SUPPLY_MANIFOLD4W, PIPE_SCRUBBERS_MANIFOLD4W, PIPE_OMNI_MIXER, PIPE_OMNI_FILTER))
+	else if (pipe_type in list(PIPE_MANIFOLD4W, PIPE_SUPPLY_MANIFOLD4W, PIPE_SCRUBBERS_MANIFOLD4W, PIPE_OMNI_MIXER, PIPE_OMNI_filt))
 		set_dir(2)
 	var/pipe_dir = get_pipe_dir()
 
@@ -777,8 +777,8 @@ Buildable meters
 				P.node2.initialize()
 				P.node2.build_network()
 
-		if(PIPE_GAS_FILTER)		//gas filter
-			var/obj/machinery/atmospherics/trinary/filter/P = new(src.loc)
+		if(PIPE_GAS_filt)		//gas filt
+			var/obj/machinery/atmospherics/trinary/filt/P = new(src.loc)
 			P.set_dir(dir)
 			P.initialize_directions = pipe_dir
 			if (pipename)
@@ -817,8 +817,8 @@ Buildable meters
 				P.node3.initialize()
 				P.node3.build_network()
 
-		if(PIPE_GAS_FILTER_M)		//gas filter mirrored
-			var/obj/machinery/atmospherics/trinary/filter/m_filter/P = new(src.loc)
+		if(PIPE_GAS_filt_M)		//gas filt mirrored
+			var/obj/machinery/atmospherics/trinary/filt/m_filt/P = new(src.loc)
 			P.set_dir(dir)
 			P.initialize_directions = pipe_dir
 			if (pipename)
@@ -1112,8 +1112,8 @@ Buildable meters
 			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
-		if(PIPE_OMNI_FILTER)
-			var/obj/machinery/atmospherics/omni/filter/P = new(loc)
+		if(PIPE_OMNI_filt)
+			var/obj/machinery/atmospherics/omni/filt/P = new(loc)
 			var/turf/T = P.loc
 			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
@@ -1165,14 +1165,14 @@ Buildable meters
 #undef PIPE_MVALVE
 #undef PIPE_PUMP
 #undef PIPE_SCRUBBER
-#undef PIPE_GAS_FILTER
+#undef PIPE_GAS_filt
 #undef PIPE_GAS_MIXER
 #undef PIPE_PASSIVE_GATE
 #undef PIPE_VOLUME_PUMP
 #undef PIPE_OUTLET_INJECT
 #undef PIPE_MTVALVE
 #undef PIPE_MTVALVEM
-#undef PIPE_GAS_FILTER_M
+#undef PIPE_GAS_filt_M
 #undef PIPE_GAS_MIXER_T
 #undef PIPE_GAS_MIXER_M
 #undef PIPE_SUPPLY_STRAIGHT

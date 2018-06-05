@@ -36,7 +36,7 @@
 	listener.cleanbot = src
 
 	if(radio_controller)
-		radio_controller.add_object(listener, beacon_freq, filter = RADIO_NAVBEACONS)
+		radio_controller.add_object(listener, beacon_freq, filt = RADIO_NAVBEACONS)
 
 /mob/living/bot/cleanbot/Destroy()
 	. = ..()
@@ -141,7 +141,7 @@
 				signal.source = src
 				signal.transmission_method = 1
 				signal.data = list("findbeakon" = "patrol")
-				frequency.post_signal(src, signal, filter = RADIO_NAVBEACONS)
+				frequency.post_signal(src, signal, filt = RADIO_NAVBEACONS)
 				signal_sent = world.time
 			else
 				if(next_dest)

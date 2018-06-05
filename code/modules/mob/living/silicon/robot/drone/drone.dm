@@ -311,7 +311,7 @@ var/list/mob_hat_cache = list()
 		if(emagged)
 			to_chat(src, "<span class='danger'>You feel something attempting to modify your programming, but your hacked subroutines are unaffected.</span>")
 		else
-			to_chat(src, "<span class='danger'>A reset-to-factory directive packet filters through your data connection, and you obediently modify your programming to suit it.</span>")
+			to_chat(src, "<span class='danger'>A reset-to-factory directive packet filts through your data connection, and you obediently modify your programming to suit it.</span>")
 			full_law_reset()
 			show_laws()
 

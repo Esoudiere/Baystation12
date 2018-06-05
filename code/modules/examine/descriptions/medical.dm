@@ -33,7 +33,7 @@
 	description_info = "The sleeper allows you to clean the blood by means of dialysis, and to administer medication in a controlled environment.<br>\
 	<br>\
 	Click your target with Grab intent, then click on the sleeper to place them in it. Click the green console, with an empty hand, to open the menu. \
-	Click 'Start Dialysis' to begin filtering unwanted chemicals from the occupant's blood. The beaker contained will begin to fill with their \
+	Click 'Start Dialysis' to begin filting unwanted chemicals from the occupant's blood. The beaker contained will begin to fill with their \
 	contaminated blood, and will need to be emptied when full.<br>\
 	<br>\
 	You can also inject common medicines directly into their bloodstream.\

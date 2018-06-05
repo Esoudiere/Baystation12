@@ -119,13 +119,13 @@
 
 //Scrubbers
 /obj/machinery/atmospherics/unary/vent_scrubber
-	description_info = "This filters the atmosphere of harmful gas.  Filtered gas goes to the pipes connected to it, typically a scrubber pipe. \
+	description_info = "This filts the atmosphere of harmful gas.  filted gas goes to the pipes connected to it, typically a scrubber pipe. \
 	It can be controlled from an Air Alarm.  It can be configured to drain all air rapidly with a 'panic syphon' from an air alarm."
 
-//Omni filters
-/obj/machinery/atmospherics/omni/filter
-	description_info = "Filters gas from a custom input direction, with up to two filtered outputs and a 'everything else' \
-	output.  The filtered output's arrows glow orange."
+//Omni filts
+/obj/machinery/atmospherics/omni/filt
+	description_info = "filts gas from a custom input direction, with up to two filted outputs and a 'everything else' \
+	output.  The filted output's arrows glow orange."
 
 //Omni mixers
 /obj/machinery/atmospherics/omni/mixer
@@ -147,7 +147,7 @@
 
 //Portable scrubbers
 /obj/machinery/portable_atmospherics/powered/scrubber
-	description_info = "Filters the air, placing harmful gases into the internal gas container.  The container can be emptied by \
+	description_info = "filts the air, placing harmful gases into the internal gas container.  The container can be emptied by \
 	connecting it to a connector port.  The pump can pump the air in (sucking) or out (blowing), at a specific target pressure.  The powercell inside can be \
 	replaced by using a screwdriver, and then adding a new cell.  A tank of gas can also be attached to the scrubber. "
 

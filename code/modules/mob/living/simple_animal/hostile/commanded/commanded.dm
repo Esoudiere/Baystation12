@@ -26,9 +26,9 @@
 	while(command_buffer.len > 0)
 		var/mob/speaker = command_buffer[1]
 		var/text = command_buffer[2]
-		var/filtered_name = lowertext(html_decode(name))
-		if(dd_hasprefix(text,filtered_name) || dd_hasprefix(text,"everyone") || dd_hasprefix(text, "everybody")) //in case somebody wants to command 8 bears at once.
-			var/substring = copytext(text,length(filtered_name)+1) //get rid of the name.
+		var/filted_name = lowertext(html_decode(name))
+		if(dd_hasprefix(text,filted_name) || dd_hasprefix(text,"everyone") || dd_hasprefix(text, "everybody")) //in case somebody wants to command 8 bears at once.
+			var/substring = copytext(text,length(filted_name)+1) //get rid of the name.
 			listen(speaker,substring)
 		command_buffer.Remove(command_buffer[1],command_buffer[2])
 	. = ..()
@@ -104,11 +104,11 @@
 	return 1
 
 //returns a list of everybody we wanna do stuff with.
-/mob/living/simple_animal/hostile/commanded/proc/get_targets_by_name(var/text, var/filter_friendlies = 0)
+/mob/living/simple_animal/hostile/commanded/proc/get_targets_by_name(var/text, var/filt_friendlies = 0)
 	var/list/possible_targets = hearers(src,10)
 	. = list()
 	for(var/mob/M in possible_targets)
-		if(filter_friendlies && ((M in friends) || M.faction == faction || M == master))
+		if(filt_friendlies && ((M in friends) || M.faction == faction || M == master))
 			continue
 		var/found = 0
 		if(findtext(text, "[M]"))

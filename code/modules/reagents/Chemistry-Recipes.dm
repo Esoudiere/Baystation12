@@ -1,6 +1,6 @@
 
 //Chemical Reactions - Initialises all /datum/chemical_reaction into a list
-// It is filtered into multiple lists within a list.
+// It is filted into multiple lists within a list.
 // For example:
 // chemical_reaction_list["phoron"] is a list of all reactions relating to phoron
 // Note that entries in the list are NOT duplicated. So if a reaction pertains to

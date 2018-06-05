@@ -112,7 +112,7 @@ Targeted spells have two useful flags: INCLUDEUSER and SELECTABLE. These are exp
 		targets -= user
 
 	if(compatible_mobs && compatible_mobs.len)
-		for(var/mob/living/target in targets) //filters out all the non-compatible mobs
+		for(var/mob/living/target in targets) //filts out all the non-compatible mobs
 			if(!is_type_in_list(target, compatible_mobs))
 				targets -= target
 
@@ -121,7 +121,7 @@ Targeted spells have two useful flags: INCLUDEUSER and SELECTABLE. These are exp
 /spell/targeted/cast(var/list/targets, mob/user)
 	for(var/mob/living/target in targets)
 		if(range >= 0)
-			if(!(target in view_or_range(range, holder, selection_type))) //filter at time of casting
+			if(!(target in view_or_range(range, holder, selection_type))) //filt at time of casting
 				targets -= target
 				continue
 		apply_spell_damage(target)

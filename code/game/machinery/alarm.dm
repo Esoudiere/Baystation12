@@ -549,17 +549,17 @@
 						"power"		= info["power"],
 						"scrubbing"	= info["scrubbing"],
 						"panic"		= info["panic"],
-						"filters"	= list()
+						"filts"	= list()
 					)
-				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Oxygen",			"command" = "o2_scrub",	"val" = info["filter_o2"]))
-				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Nitrogen",		"command" = "n2_scrub",	"val" = info["filter_n2"]))
-				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Carbon Dioxide", "command" = "co2_scrub","val" = info["filter_co2"]))
-				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Toxin"	, 		"command" = "tox_scrub","val" = info["filter_phoron"]))
-				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Nitrous Oxide",	"command" = "n2o_scrub","val" = info["filter_n2o"]))
+				scrubbers[scrubbers.len]["filts"] += list(list("name" = "Oxygen",			"command" = "o2_scrub",	"val" = info["filt_o2"]))
+				scrubbers[scrubbers.len]["filts"] += list(list("name" = "Nitrogen",		"command" = "n2_scrub",	"val" = info["filt_n2"]))
+				scrubbers[scrubbers.len]["filts"] += list(list("name" = "Carbon Dioxide", "command" = "co2_scrub","val" = info["filt_co2"]))
+				scrubbers[scrubbers.len]["filts"] += list(list("name" = "Toxin"	, 		"command" = "tox_scrub","val" = info["filt_phoron"]))
+				scrubbers[scrubbers.len]["filts"] += list(list("name" = "Nitrous Oxide",	"command" = "n2o_scrub","val" = info["filt_n2o"]))
 			data["scrubbers"] = scrubbers
 		if(AALARM_SCREEN_MODE)
 			var/modes[0]
-			modes[++modes.len] = list("name" = "Filtering - Scrubs out contaminants", 			"mode" = AALARM_MODE_SCRUBBING,		"selected" = mode == AALARM_MODE_SCRUBBING, 	"danger" = 0)
+			modes[++modes.len] = list("name" = "filting - Scrubs out contaminants", 			"mode" = AALARM_MODE_SCRUBBING,		"selected" = mode == AALARM_MODE_SCRUBBING, 	"danger" = 0)
 			modes[++modes.len] = list("name" = "Replace Air - Siphons out air while replacing", "mode" = AALARM_MODE_REPLACEMENT,	"selected" = mode == AALARM_MODE_REPLACEMENT,	"danger" = 0)
 			modes[++modes.len] = list("name" = "Panic - Siphons air out of the room", 			"mode" = AALARM_MODE_PANIC,			"selected" = mode == AALARM_MODE_PANIC, 		"danger" = 1)
 			modes[++modes.len] = list("name" = "Cycle - Siphons air before replacing", 			"mode" = AALARM_MODE_CYCLE,			"selected" = mode == AALARM_MODE_CYCLE, 		"danger" = 1)

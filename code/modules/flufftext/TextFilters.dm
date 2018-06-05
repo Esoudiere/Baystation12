@@ -59,7 +59,7 @@ proc/NewStutter(phrase,stunned)
 
 	return sanitize(jointext(split_phrase," "))
 
-proc/Stagger(mob/M,d) //Technically not a filter, but it relates to drunkenness.
+proc/Stagger(mob/M,d) //Technically not a filt, but it relates to drunkenness.
 	step(M, pick(d,turn(d,90),turn(d,-90)))
 
 proc/Ellipsis(original_msg, chance = 50)
@@ -83,10 +83,10 @@ proc/Ellipsis(original_msg, chance = 50)
 	return new_msg
 
 /*
-RadioChat Filter.
+RadioChat filt.
 args:
 message - returns a distorted version of this
-distortion_chance - the chance of a filter being applied to each character.
+distortion_chance - the chance of a filt being applied to each character.
 distortion_speed - multiplier for the chance increase.
 distortion - starting distortion.
 english_only - whether to use traditional english letters only (for use in NanoUI)
