@@ -385,15 +385,7 @@
 		if(xray && tracking == 1)
 			src.forceMove(T)
 			return 1
-		if(not_turf_contains_dense_objects(T))
-			if(tracking == 1)
-				return src.forceMove(T)
-			else if(tracking == 2)
-				if(prob(80))
-					Stagger(src, dir)
-				else
-					return src.forceMove(T)
-		return 0
+		return src.forceMove(T)
 
 	Allow_Spacemove()
 		if(tracking)
